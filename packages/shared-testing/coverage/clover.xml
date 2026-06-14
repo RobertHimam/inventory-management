@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1781239028720" clover="3.2.0">
+  <project timestamp="1781239028720" name="All files">
+    <metrics statements="25" coveredstatements="25" conditionals="0" coveredconditionals="0" methods="8" coveredmethods="8" elements="33" coveredelements="33" complexity="0" loc="25" ncloc="25" packages="1" files="1" classes="1"/>
+    <file name="index.ts" path="/Users/bits/fullstack/inventory-management/packages/shared-testing/src/index.ts">
+      <metrics statements="25" coveredstatements="25" conditionals="0" coveredconditionals="0" methods="8" coveredmethods="8"/>
+      <line num="1" count="1" type="stmt"/>
+      <line num="2" count="1" type="stmt"/>
+      <line num="5" count="1" type="stmt"/>
+      <line num="18" count="1" type="stmt"/>
+      <line num="25" count="1" type="stmt"/>
+      <line num="33" count="1" type="stmt"/>
+      <line num="43" count="1" type="stmt"/>
+      <line num="44" count="4" type="stmt"/>
+      <line num="56" count="4" type="stmt"/>
+      <line num="59" count="1" type="stmt"/>
+      <line num="60" count="3" type="stmt"/>
+      <line num="66" count="3" type="stmt"/>
+      <line num="69" count="1" type="stmt"/>
+      <line num="70" count="2" type="stmt"/>
+      <line num="77" count="2" type="stmt"/>
+      <line num="80" count="1" type="stmt"/>
+      <line num="81" count="1" type="stmt"/>
+      <line num="89" count="1" type="stmt"/>
+      <line num="93" count="1" type="stmt"/>
+      <line num="94" count="3" type="stmt"/>
+      <line num="97" count="1" type="stmt"/>
+      <line num="101" count="2" type="stmt"/>
+      <line num="105" count="4" type="stmt"/>
+      <line num="106" count="4" type="stmt"/>
+      <line num="110" count="2" type="stmt"/>
+    </file>
+  </project>
+</coverage>

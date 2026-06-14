@@ -1,0 +1,213 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: inventory-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - inventory-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: inventory-rabbitmq
+    restart: unless-stopped
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - inventory-network
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    container_name: inventory-gateway
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      AUTH_SERVICE_URL: http://auth-service:3000
+      PRODUCT_SERVICE_URL: http://product-service:3000
+      INVENTORY_SERVICE_URL: http://inventory-service:3000
+      REPORT_SERVICE_URL: http://report-service:3000
+      NOTIFICATION_SERVICE_URL: http://notification-service:3000
+      AUDIT_SERVICE_URL: http://audit-service:3000
+      SSE_SERVICE_URL: http://sse-service:3000
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - auth-service
+      - product-service
+      - inventory-service
+      - report-service
+      - notification-service
+      - audit-service
+      - sse-service
+    networks:
+      - inventory-network
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: apps/auth-service/Dockerfile
+    container_name: inventory-auth-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/auth
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - inventory-network
+
+  product-service:
+    build:
+      context: .
+      dockerfile: apps/product-service/Dockerfile
+    container_name: inventory-product-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/products
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      RABBITMQ_EXCHANGE: inventory.events
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - inventory-network
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: apps/inventory-service/Dockerfile
+    container_name: inventory-inventory-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/inventory
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      RABBITMQ_EXCHANGE: inventory.events
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - inventory-network
+
+  report-service:
+    build:
+      context: .
+      dockerfile: apps/report-service/Dockerfile
+    container_name: inventory-report-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGODB_URI: mongodb://admin:admin123@mongodb:/reports
+      RABBITMQ_URL: amqp://rabbitmq:5672
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - inventory-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: apps/notification-service/Dockerfile
+    container_name: inventory-notification-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      RABBITMQ_EXCHANGE: inventory.events
+    depends_on:
+      - rabbitmq
+    networks:
+      - inventory-network
+
+  audit-service:
+    build:
+      context: .
+      dockerfile: apps/audit-service/Dockerfile
+    container_name: inventory-audit-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/audit
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      RABBITMQ_EXCHANGE: inventory.events
+      RABBITMQ_DLQ_SUFFIX: .dlq
+    depends_on:
+      - mongodb
+      - rabbitmq
+    networks:
+      - inventory-network
+
+  sse-service:
+    build:
+      context: .
+      dockerfile: apps/sse-service/Dockerfile
+    container_name: inventory-sse-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+    depends_on:
+      - rabbitmq
+      - auth-service
+    networks:
+      - inventory-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: inventory-frontend
+    restart: unless-stopped
+    ports:
+      - '3001:3000'
+    environment:
+      NODE_ENV: development
+      VITE_API_URL: http://localhost:3000
+    depends_on:
+      - gateway
+    networks:
+      - inventory-network
+
+networks:
+  inventory-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+  rabbitmq_data:

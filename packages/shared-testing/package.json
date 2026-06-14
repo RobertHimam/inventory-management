@@ -1,0 +1,36 @@
+{
+  "name": "@inventory/shared-testing",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src --ext .ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@inventory/shared-auth": "workspace:*",
+    "@inventory/shared-events": "workspace:*",
+    "@inventory/shared-logger": "workspace:*",
+    "@inventory/shared-rabbitmq": "workspace:*",
+    "@inventory/shared-types": "workspace:*",
+    "@testcontainers/mongodb": "^10.2.0",
+    "@testcontainers/rabbitmq": "^10.2.0",
+    "mongodb": "^6.5.0",
+    "mongodb-memory-server": "^8.12.2",
+    "nanoid": "3.3.4",
+    "supertest": "^6.3.3",
+    "testcontainers": "^10.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^22.5.0",
+    "@types/supertest": "^6.0.2",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.5.4"
+  }
+}

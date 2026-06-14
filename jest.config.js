@@ -1,0 +1,45 @@
+/** @type {import('jest').Config} */
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  extensionsToTreatAsEsm: ['.ts'],
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { useESM: true, tsconfig: 'tsconfig.base.json' }],
+  },
+  roots: ['<rootDir>/packages', '<rootDir>/apps'],
+  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.spec.ts'],
+  moduleNameMapper: {
+    '^@shared/([^/]+)(.*)$': '<rootDir>/packages/shared-$1/src$2',
+    '^@types(?:/(.*))?$': '<rootDir>/packages/shared-types/src/$1',
+    '^@events(?:/(.*))?$': '<rootDir>/packages/shared-events/src/$1',
+    '^@auth(?:/(.*))?$': '<rootDir>/packages/shared-auth/src/$1',
+    '^@rabbitmq(?:/(.*))?$': '<rootDir>/packages/shared-rabbitmq/src/$1',
+    '^@logger(?:/(.*))?$': '<rootDir>/packages/shared-logger/src/$1',
+    '^@config/([^/]+)(.*)$': '<rootDir>/packages/$1/src/config$2',
+    '^@utils/([^/]+)(.*)$': '<rootDir>/packages/$1/src/utils$2',
+  },
+  collectCoverageFrom: [
+    'packages/**/src/**/*.ts',
+    'apps/**/src/**/*.ts',
+    '!**/node_modules/**',
+    '!**/dist/**',
+    '!**/__tests__/**',
+  ],
+  coverageDirectory: 'coverage',
+  coverageReporters: ['text', 'lcov', 'html'],
+  coverageProvider: 'v8',
+  coverageThreshold: {
+    global: {
+      statements: 80,
+      functions: 80,
+      branches: 80,
+      lines: 80,
+    },
+  },
+  clearMocks: true,
+  restoreMocks: true,
+  resetMocks: true,
+  detectOpenHandles: true,
+  testTimeout: 10000,
+  errorOnDeprecated: true,
+};
