@@ -86,6 +86,7 @@ describe('Authorization Rules (RBAC)', () => {
       const res = await request(app)
         .post('/api/v1/products')
         .set('Authorization', `Bearer ${adminToken}`)
+        .set('Idempotency-Key', 'auth-admin-key-1')
         .send(productData);
 
       expect(res.status).toBe(201);

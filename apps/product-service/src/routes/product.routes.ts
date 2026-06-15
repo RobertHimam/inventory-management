@@ -22,6 +22,7 @@ const productController = new ProductController(productService);
 const auth = authenticate(config.jwtSecret);
 const canRead = authorize(['product:read']);
 const canWrite = authorize(['product:write']);
+import { idempotency } from '../middleware/idempotency.middleware';
 
 /**
  * @swagger
@@ -104,6 +105,13 @@ router.get('/', auth, canRead, productController.listProducts.bind(productContro
  *     tags: [Products]
  *     security:
  *       - BearerAuth: []
+ *     parameters:
+ *       - in: header
+ *         name: Idempotency-Key
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Unique key to ensure idempotency of the product creation request
  *     requestBody:
  *       required: true
  *       content:
@@ -136,15 +144,15 @@ router.get('/', auth, canRead, productController.listProducts.bind(productContro
  *                 type: boolean
  *     responses:
  *       201:
- *         description: Product created successfully
+ *         description: Product created successfully (or cached product response)
  *       400:
- *         description: Validation error
+ *         description: Validation error, missing Idempotency-Key header, or key reuse mismatch
  *       409:
- *         description: Duplicate SKU conflict
+ *         description: Duplicate SKU conflict or identical request in progress
  *       500:
  *         description: Internal server error
  */
-router.post('/', auth, canWrite, productController.createProduct.bind(productController));
+router.post('/', auth, canWrite, idempotency, productController.createProduct.bind(productController));
 
 /**
  * @swagger
