@@ -7,7 +7,7 @@ import { ValidationError, ConflictError, NotFoundError } from '../../../errors';
 const mockRequest = (body?: Partial<CreateProductDto>): Request => {
   return {
     body: body || {},
-  } as Request;
+  } as Request<{ id: string }, {}, UpdateProductDto>;
 };
 
 const mockResponse = (): Response => {
@@ -29,6 +29,10 @@ describe('ProductController', () => {
   beforeEach(() => {
     mockService = {
       createProduct: jest.fn(),
+      updateProduct: jest.fn(),
+      deleteProduct: jest.fn(),
+      listProducts: jest.fn(),
+      getProductDetail: jest.fn(),
     } as any;
     controller = new ProductController(mockService);
   });
@@ -146,7 +150,7 @@ describe('ProductController', () => {
       const updateDto: UpdateProductDto = { name: 'Updated' };
       mockService.updateProduct = jest.fn().mockResolvedValueOnce({ _id: productId, name: 'Updated' });
 
-      const req = { body: updateDto, params: { id: productId } } as Request;
+      const req = { body: updateDto, params: { id: productId } } as Request<{ id: string }, {}, UpdateProductDto>;
       const res = mockResponse();
 
       await controller.updateProduct(req, res);
@@ -163,7 +167,7 @@ describe('ProductController', () => {
       const updateDto: UpdateProductDto = { name: 'Updated' };
       mockService.updateProduct.mockRejectedValueOnce(new NotFoundError('Product not found'));
 
-      const req = { body: updateDto, params: { id: productId } } as Request;
+      const req = { body: updateDto, params: { id: productId } } as Request<{ id: string }, {}, UpdateProductDto>;
       const res = mockResponse();
 
       await controller.updateProduct(req, res);
@@ -179,7 +183,7 @@ describe('ProductController', () => {
       const invalidDto = { price: -5 } as unknown as UpdateProductDto;
       mockService.updateProduct.mockRejectedValueOnce(new ValidationError('Invalid data'));
 
-      const req = { body: invalidDto, params: { id: productId } } as Request;
+      const req = { body: invalidDto, params: { id: productId } } as Request<{ id: string }, {}, UpdateProductDto>;
       const res = mockResponse();
 
       await controller.updateProduct(req, res);
@@ -195,7 +199,7 @@ describe('ProductController', () => {
       const updateDto: UpdateProductDto = { sku: 'DUP' };
       mockService.updateProduct.mockRejectedValueOnce(new ConflictError("SKU 'DUP' already exists"));
 
-      const req = { body: updateDto, params: { id: productId } } as Request;
+      const req = { body: updateDto, params: { id: productId } } as Request<{ id: string }, {}, UpdateProductDto>;
       const res = mockResponse();
 
       await controller.updateProduct(req, res);
@@ -211,11 +215,238 @@ describe('ProductController', () => {
       const updateDto: UpdateProductDto = { name: 'Test' };
       mockService.updateProduct.mockRejectedValueOnce(new Error('Unexpected'));
 
-      const req = { body: updateDto, params: { id: productId } } as Request;
+      const req = { body: updateDto, params: { id: productId } } as Request<{ id: string }, {}, UpdateProductDto>;
       const res = mockResponse();
 
       await controller.updateProduct(req, res);
 
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Internal server error',
+      });
+    });
+  });
+
+  describe('deleteProduct', () => {
+    const productId = 'product-id-123';
+    const deletedProduct = {
+      _id: productId,
+      name: 'Deleted Product',
+      deletedAt: new Date(),
+    };
+
+    it('should respond with 200 and deleted product on success', async () => {
+      const deletedProductWithUser = {
+        ...deletedProduct,
+        deletedBy: 'user-123',
+      };
+      mockService.deleteProduct.mockResolvedValueOnce(deletedProductWithUser);
+
+      const req = { params: { id: productId }, user: { userId: 'user-123', role: 'ADMIN' } } as any;
+      const res = mockResponse();
+
+      await controller.deleteProduct(req, res);
+
+      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'user-123');
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: deletedProductWithUser,
+      });
+    });
+
+    it('should fall back to unknown for deletedBy when req.user is not present', async () => {
+      const deletedProductWithSystem = {
+        ...deletedProduct,
+        deletedBy: 'unknown',
+      };
+      mockService.deleteProduct.mockResolvedValueOnce(deletedProductWithSystem);
+
+      const req = { params: { id: productId } } as any;
+      const res = mockResponse();
+
+      await controller.deleteProduct(req, res);
+
+      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'unknown');
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('should respond with 404 when product not found', async () => {
+      mockService.deleteProduct.mockRejectedValueOnce(new NotFoundError('Product not found'));
+
+      const req = { params: { id: productId }, user: { userId: 'user-123', role: 'ADMIN' } } as any;
+      const res = mockResponse();
+
+      await controller.deleteProduct(req, res);
+
+      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'user-123');
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Product not found',
+      });
+    });
+
+    it('should respond with 500 for unexpected errors', async () => {
+      mockService.deleteProduct.mockRejectedValueOnce(new Error('Database failure'));
+
+      const req = { params: { id: productId }, user: { userId: 'user-123', role: 'ADMIN' } } as any;
+      const res = mockResponse();
+
+      await controller.deleteProduct(req, res);
+
+      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'user-123');
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Internal server error',
+      });
+    });
+  });
+
+  describe('listProducts', () => {
+    it('should respond with 200 and paginated products on success', async () => {
+      const paginatedResult = {
+        data: [{ _id: 'prod1', name: 'Product 1' }],
+        pagination: {
+          page: 2,
+          limit: 5,
+          total: 10,
+          totalPages: 2,
+        },
+      };
+      mockService.listProducts.mockResolvedValueOnce(paginatedResult);
+
+      const req = {
+        query: {
+          page: '2',
+          limit: '5',
+          search: 'phone',
+          sort: 'price',
+          order: 'asc',
+        },
+      } as any;
+      const res = mockResponse();
+
+      await controller.listProducts(req, res);
+
+      expect(mockService.listProducts).toHaveBeenCalledWith({
+        page: '2',
+        limit: '5',
+        search: 'phone',
+        sort: 'price',
+        order: 'asc',
+      });
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: paginatedResult.data,
+        pagination: paginatedResult.pagination,
+      });
+    });
+
+    it('should fall back to defaults and call service with parsed query parameters', async () => {
+      const paginatedResult = {
+        data: [],
+        pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+      };
+      mockService.listProducts.mockResolvedValueOnce(paginatedResult);
+
+      const req = { query: {} } as any;
+      const res = mockResponse();
+
+      await controller.listProducts(req, res);
+
+      expect(mockService.listProducts).toHaveBeenCalledWith({});
+      expect(res.status).toHaveBeenCalledWith(200);
+    });
+
+    it('should respond with 400 for validation errors on query parameters', async () => {
+      mockService.listProducts.mockRejectedValueOnce(new ValidationError('Invalid page number'));
+
+      const req = { query: { page: '-1' } } as any;
+      const res = mockResponse();
+
+      await controller.listProducts(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Invalid page number',
+      });
+    });
+
+    it('should respond with 500 for unexpected errors', async () => {
+      mockService.listProducts.mockRejectedValueOnce(new Error('Unexpected error'));
+
+      const req = { query: {} } as any;
+      const res = mockResponse();
+
+      await controller.listProducts(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Internal server error',
+      });
+    });
+  });
+
+  describe('getProductDetail', () => {
+    const productId = 'product-id-123';
+    const mockProduct = {
+      _id: productId,
+      name: 'Test Product',
+      price: 50,
+      sku: 'TEST123',
+      category: 'Test',
+      stockQuantity: 10,
+      isActive: true,
+      deletedAt: null,
+    };
+
+    it('should respond with 200 and product details on success', async () => {
+      mockService.getProductDetail.mockResolvedValueOnce(mockProduct);
+
+      const req = { params: { id: productId } } as any;
+      const res = mockResponse();
+
+      await controller.getProductDetail(req, res);
+
+      expect(mockService.getProductDetail).toHaveBeenCalledWith(productId);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({
+        success: true,
+        data: mockProduct,
+      });
+    });
+
+    it('should respond with 404 when product is not found', async () => {
+      mockService.getProductDetail.mockRejectedValueOnce(new NotFoundError('Product not found'));
+
+      const req = { params: { id: productId } } as any;
+      const res = mockResponse();
+
+      await controller.getProductDetail(req, res);
+
+      expect(mockService.getProductDetail).toHaveBeenCalledWith(productId);
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith({
+        success: false,
+        error: 'Product not found',
+      });
+    });
+
+    it('should respond with 500 for unexpected errors', async () => {
+      mockService.getProductDetail.mockRejectedValueOnce(new Error('Unexpected error'));
+
+      const req = { params: { id: productId } } as any;
+      const res = mockResponse();
+
+      await controller.getProductDetail(req, res);
+
+      expect(mockService.getProductDetail).toHaveBeenCalledWith(productId);
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         success: false,

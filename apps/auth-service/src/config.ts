@@ -20,6 +20,7 @@ const required = [
   'JWT_EXPIRES_IN',
   'JWT_REFRESH_EXPIRES_IN',
   'RABBITMQ_URL',
+  'RABBITMQ_EXCHANGE',
 ];
 
 const missing = required.filter((key) => !process.env[key]);
@@ -37,4 +38,5 @@ export const config = {
   jwtExpiresIn: process.env.JWT_EXPIRES_IN!,
   jwtRefreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN!,
   rabbitmqUrl: process.env.RABBITMQ_URL!,
+  rabbitmqExchange: process.env.RABBITMQ_EXCHANGE!,
 };

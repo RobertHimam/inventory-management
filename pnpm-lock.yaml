@@ -135,6 +135,9 @@ importers:
 
   apps/product-service:
     dependencies:
+      '@inventory/shared-auth':
+        specifier: workspace:*
+        version: link:../../packages/shared-auth
       '@inventory/shared-events':
         specifier: workspace:*
         version: link:../../packages/shared-events

@@ -2,6 +2,19 @@ import { ProductService } from '../../../services/ProductService';
 import { IProductRepository } from '../../../repositories/interfaces/IProductRepository';
 import { CreateProductDto, UpdateProductDto } from '../../../validation/product.validation';
 import { ConflictError, DatabaseError, ValidationError, NotFoundError } from '../../../errors';
+import { EventBus } from '@inventory/shared-rabbitmq';
+import { Logger } from '@inventory/shared-logger';
+
+// Mock EventBus
+jest.mock('@inventory/shared-rabbitmq');
+
+const mockLogger = {
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  setCorrelationId: jest.fn(),
+} as unknown as jest.Mocked<Logger>;
 
 // Mock repository
 const mockCreate = jest.fn();
@@ -23,11 +36,14 @@ const createMockRepository = () => ({
 describe('ProductService', () => {
   let service: ProductService;
   let repository: IProductRepository;
+  let eventBus: EventBus;
 
   beforeEach(() => {
     jest.clearAllMocks();
     repository = createMockRepository();
-    service = new ProductService(repository);
+    eventBus = new EventBus({} as any, 'exchange');
+    (eventBus.publish as jest.Mock).mockResolvedValue(undefined);
+    service = new ProductService(repository, eventBus, mockLogger);
   });
 
   describe('createProduct', () => {
@@ -105,6 +121,80 @@ describe('ProductService', () => {
       mockCreate.mockRejectedValueOnce(new Error('Database error'));
 
       await expect(service.createProduct(validDto)).rejects.toThrow(DatabaseError);
+    });
+
+    it('should publish product.created event when product is successfully created', async () => {
+      const validDto: CreateProductDto = {
+        name: 'Test Product',
+        description: 'A test product',
+        price: 99.99,
+        sku: 'TEST123',
+        category: 'Electronics',
+        stockQuantity: 10,
+        isActive: true,
+      };
+
+      mockFindBySku.mockResolvedValueOnce(null);
+
+      const createdProduct = {
+        _id: 'generated-id',
+        name: 'Test Product',
+        description: 'A test product',
+        price: 99.99,
+        sku: 'TEST123',
+        category: 'Electronics',
+        stockQuantity: 10,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      mockCreate.mockResolvedValueOnce(createdProduct);
+
+      const result = await service.createProduct(validDto, 'test-correlation-id');
+
+      expect(result).toEqual(createdProduct);
+      expect(eventBus.publish).toHaveBeenCalledTimes(1);
+      expect(eventBus.publish).toHaveBeenCalledWith('product.created', {
+        productId: 'generated-id',
+        name: 'Test Product',
+        sku: 'TEST123',
+        categoryId: 'Electronics',
+        price: 99.99,
+      }, 'test-correlation-id');
+    });
+
+    it('should log error but still return product if event publishing fails', async () => {
+      const validDto: CreateProductDto = {
+        name: 'Test Product',
+        description: 'A test product',
+        price: 99.99,
+        sku: 'TEST123',
+        category: 'Electronics',
+        stockQuantity: 10,
+        isActive: true,
+      };
+
+      mockFindBySku.mockResolvedValueOnce(null);
+
+      const createdProduct = {
+        _id: 'generated-id',
+        name: 'Test Product',
+        description: 'A test product',
+        price: 99.99,
+        sku: 'TEST123',
+        category: 'Electronics',
+        stockQuantity: 10,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      mockCreate.mockResolvedValueOnce(createdProduct);
+      (eventBus.publish as jest.Mock).mockRejectedValueOnce(new Error('Publish failed'));
+
+      const result = await service.createProduct(validDto);
+
+      expect(result).toEqual(createdProduct);
+      expect(eventBus.publish).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -187,7 +277,7 @@ describe('ProductService', () => {
 
       const result = await service.updateProduct(productId, updateDto);
 
-      expect(mockFindBySku).toHaveBeenCalledWith('OLDSKU');
+      expect(mockFindBySku).not.toHaveBeenCalled();
       expect(result).toEqual(updatedProduct);
     });
 
@@ -235,6 +325,267 @@ describe('ProductService', () => {
 
       expect(mockUpdate).toHaveBeenCalledWith(productId, {});
       expect(result).toEqual(updatedProduct);
+    });
+
+    it('should publish product.updated event when product is successfully updated', async () => {
+      const updateDto: UpdateProductDto = {
+        name: 'Updated Name',
+        price: 75.99,
+      };
+
+      mockFindById.mockResolvedValueOnce(existingProduct);
+      mockUpdate.mockResolvedValueOnce({
+        ...existingProduct,
+        ...updateDto,
+      });
+
+      const result = await service.updateProduct(productId, updateDto, 'test-correlation-id');
+
+      expect(result.name).toBe(updateDto.name);
+      expect(eventBus.publish).toHaveBeenCalledTimes(1);
+      expect(eventBus.publish).toHaveBeenCalledWith('product.updated', {
+        productId,
+        name: 'Updated Name',
+        price: 75.99,
+        sku: 'OLDSKU',
+        categoryId: 'Old Category',
+        isActive: true,
+      }, 'test-correlation-id');
+    });
+
+    it('should log error but still return product if event publishing fails for update', async () => {
+      const updateDto: UpdateProductDto = {
+        name: 'Updated Name',
+      };
+
+      mockFindById.mockResolvedValueOnce(existingProduct);
+      mockUpdate.mockResolvedValueOnce({
+        ...existingProduct,
+        ...updateDto,
+      });
+      (eventBus.publish as jest.Mock).mockRejectedValueOnce(new Error('Publish failed'));
+
+      const result = await service.updateProduct(productId, updateDto);
+
+      expect(result.name).toBe(updateDto.name);
+      expect(eventBus.publish).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('deleteProduct', () => {
+    const productId = 'existing-product-id';
+    const deletedBy = 'user-123';
+    const existingProduct = {
+      _id: productId,
+      name: 'Test Product',
+      price: 50,
+      sku: 'TEST123',
+      category: 'Test',
+      stockQuantity: 10,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    const deletedProduct = {
+      ...existingProduct,
+      deletedAt: new Date(),
+      deletedBy,
+    };
+
+    it('should soft delete product successfully', async () => {
+      mockFindById.mockResolvedValueOnce(existingProduct);
+      mockDelete.mockResolvedValueOnce(deletedProduct);
+
+      const result = await service.deleteProduct(productId, deletedBy);
+
+      expect(mockFindById).toHaveBeenCalledWith(productId);
+      expect(mockDelete).toHaveBeenCalledWith(productId, deletedBy);
+      expect(result).toEqual(deletedProduct);
+      expect(result).toHaveProperty('deletedAt');
+      expect(result).toHaveProperty('deletedBy', deletedBy);
+    });
+
+    it('should throw NotFoundError when product does not exist', async () => {
+      mockFindById.mockResolvedValueOnce(null);
+
+      await expect(service.deleteProduct(productId, deletedBy)).rejects.toThrow(NotFoundError);
+      expect(mockDelete).not.toHaveBeenCalled();
+    });
+
+    it('should throw DatabaseError when repository throws', async () => {
+      mockFindById.mockResolvedValueOnce(existingProduct);
+      mockDelete.mockRejectedValueOnce(new Error('Database error'));
+
+      await expect(service.deleteProduct(productId, deletedBy)).rejects.toThrow(DatabaseError);
+      expect(mockDelete).toHaveBeenCalledWith(productId, deletedBy);
+    });
+
+    it('should throw NotFoundError when repository returns null after delete', async () => {
+      mockFindById.mockResolvedValueOnce(existingProduct);
+      mockDelete.mockResolvedValueOnce(null);
+
+      await expect(service.deleteProduct(productId, deletedBy)).rejects.toThrow(NotFoundError);
+      expect(mockDelete).toHaveBeenCalledWith(productId, deletedBy);
+    });
+
+    it('should verify deletedAt and deletedBy fields are set on returned product', async () => {
+      const deletedAt = new Date('2024-01-15T10:30:00Z');
+      const productWithDeletedAt = {
+        ...existingProduct,
+        deletedAt,
+        deletedBy,
+      };
+
+      mockFindById.mockResolvedValueOnce(existingProduct);
+      mockDelete.mockResolvedValueOnce(productWithDeletedAt);
+
+      const result = await service.deleteProduct(productId, deletedBy);
+
+      expect(mockFindById).toHaveBeenCalledWith(productId);
+      expect(mockDelete).toHaveBeenCalledWith(productId, deletedBy);
+      expect(result).toHaveProperty('deletedAt');
+      expect(result.deletedAt).toBe(deletedAt);
+      expect(result.deletedBy).toBe(deletedBy);
+    });
+
+    it('should publish product.deleted event when product is successfully deleted', async () => {
+      mockFindById.mockResolvedValueOnce(existingProduct);
+      mockDelete.mockResolvedValueOnce(deletedProduct);
+
+      const result = await service.deleteProduct(productId, deletedBy, 'test-correlation-id');
+
+      expect(result).toEqual(deletedProduct);
+      expect(eventBus.publish).toHaveBeenCalledTimes(1);
+      expect(eventBus.publish).toHaveBeenCalledWith('product.deleted', {
+        productId,
+        deletedBy,
+      }, 'test-correlation-id');
+    });
+
+    it('should log error but still return deleted product if event publishing fails for delete', async () => {
+      mockFindById.mockResolvedValueOnce(existingProduct);
+      mockDelete.mockResolvedValueOnce(deletedProduct);
+      (eventBus.publish as jest.Mock).mockRejectedValueOnce(new Error('Publish failed'));
+
+      const result = await service.deleteProduct(productId, deletedBy);
+
+      expect(result).toEqual(deletedProduct);
+      expect(eventBus.publish).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('listProducts', () => {
+    it('should list products successfully and calculate correct pagination metadata', async () => {
+      const mockProducts = [{ _id: 'prod1', name: 'Product 1' }];
+      mockFindAll.mockResolvedValueOnce({
+        data: mockProducts,
+        total: 25,
+      });
+
+      const queryDto = {
+        page: 2,
+        limit: 10,
+        search: 'phone',
+        sort: 'price',
+        order: 'asc' as const,
+      };
+
+      const result = await service.listProducts(queryDto);
+
+      expect(mockFindAll).toHaveBeenCalledWith(queryDto);
+      expect(result).toEqual({
+        data: mockProducts,
+        pagination: {
+          page: 2,
+          limit: 10,
+          total: 25,
+          totalPages: 3,
+        },
+      });
+    });
+
+    it('should use default values if parameters are missing or undefined', async () => {
+      const mockProducts = [{ _id: 'prod1', name: 'Product 1' }];
+      mockFindAll.mockResolvedValueOnce({
+        data: mockProducts,
+        total: 5,
+      });
+
+      const result = await service.listProducts({});
+
+      expect(mockFindAll).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+        sort: 'createdAt',
+        order: 'desc',
+      });
+      expect(result).toEqual({
+        data: mockProducts,
+        pagination: {
+          page: 1,
+          limit: 10,
+          total: 5,
+          totalPages: 1,
+        },
+      });
+    });
+
+    it('should return 0 totalPages if total is 0', async () => {
+      mockFindAll.mockResolvedValueOnce({
+        data: [],
+        total: 0,
+      });
+
+      const result = await service.listProducts({ limit: 5 });
+
+      expect(result.pagination).toEqual({
+        page: 1,
+        limit: 5,
+        total: 0,
+        totalPages: 0,
+      });
+    });
+
+    it('should throw DatabaseError if repository.findAll rejects', async () => {
+      mockFindAll.mockRejectedValueOnce(new Error('DB failure'));
+
+      await expect(service.listProducts({})).rejects.toThrow(DatabaseError);
+    });
+  });
+
+  describe('getProductDetail', () => {
+    const productId = 'existing-product-id';
+    const mockProduct = {
+      _id: productId,
+      name: 'Test Product',
+      price: 50,
+      sku: 'TEST123',
+      category: 'Test',
+      stockQuantity: 10,
+      isActive: true,
+      deletedAt: null,
+    };
+
+    it('should return product details successfully', async () => {
+      mockFindById.mockResolvedValueOnce(mockProduct);
+
+      const result = await service.getProductDetail(productId);
+
+      expect(mockFindById).toHaveBeenCalledWith(productId);
+      expect(result).toEqual(mockProduct);
+    });
+
+    it('should throw NotFoundError when product does not exist', async () => {
+      mockFindById.mockResolvedValueOnce(null);
+
+      await expect(service.getProductDetail(productId)).rejects.toThrow(NotFoundError);
+      expect(mockFindById).toHaveBeenCalledWith(productId);
+    });
+
+    it('should throw DatabaseError when repository throws', async () => {
+      mockFindById.mockRejectedValueOnce(new Error('Database error'));
+
+      await expect(service.getProductDetail(productId)).rejects.toThrow(DatabaseError);
     });
   });
 });

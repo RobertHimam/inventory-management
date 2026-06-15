@@ -1,4 +1,5 @@
-import { logger } from '@inventory/shared-logger';
+import { createLogger } from '@inventory/shared-logger';
+const logger = createLogger({ level: 'info' });
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import { MongoClient, Db } from 'mongodb';
 
@@ -21,7 +22,9 @@ export async function teardownTestDatabase(): Promise<void> {
     }
     db = null;
   } catch (error) {
-    logger.error('Error during database teardown:', error);
+    logger.error('Error during database teardown', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     throw error;
   }
 }

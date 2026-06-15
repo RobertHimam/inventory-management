@@ -6,6 +6,10 @@ jest.mock('pino', () => ({
   __esModule: true,
   default: jest.fn(() => ({
     write: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+    debug: jest.fn(),
   })),
 }));
 
@@ -17,6 +21,10 @@ describe('createLogger', () => {
     mockWrite = jest.fn();
     mockedPino.mockImplementation(() => ({
       write: mockWrite,
+      info: mockWrite,
+      warn: mockWrite,
+      error: mockWrite,
+      debug: mockWrite,
     }));
   });
 

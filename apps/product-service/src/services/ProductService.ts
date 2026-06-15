@@ -1,12 +1,20 @@
+import { randomUUID } from 'crypto';
 import { IProductRepository } from '../repositories/interfaces/IProductRepository';
-import { CreateProductDto, UpdateProductDto } from '../validation/product.validation';
-import { createProductSchema, updateProductSchema } from '../validation/product.validation';
+import { CreateProductDto, UpdateProductDto, ListProductsQueryDto } from '../validation/product.validation';
+import { createProductSchema, updateProductSchema, listProductsQuerySchema } from '../validation/product.validation';
 import { ConflictError, DatabaseError, ValidationError, NotFoundError } from '../errors';
+import { EventBus } from '@inventory/shared-rabbitmq';
+import { Logger, createLogger } from '@inventory/shared-logger';
+import { createProductCreatedEvent, createProductUpdatedEvent, createProductDeletedEvent } from '@inventory/shared-events';
 
 export class ProductService {
-  constructor(private readonly repository: IProductRepository) {}
+  constructor(
+    private readonly repository: IProductRepository,
+    private readonly eventBus?: EventBus,
+    private readonly logger: Logger = createLogger()
+  ) {}
 
-  async createProduct(dto: CreateProductDto): Promise<any> {
+  async createProduct(dto: CreateProductDto, correlationId?: string): Promise<any> {
     // 1. Validate DTO
     const validationResult = createProductSchema.safeParse(dto);
     if (!validationResult.success) {
@@ -26,13 +34,37 @@ export class ProductService {
     // 3. Create product
     try {
       const product = await this.repository.create(validatedDto);
+
+      // Publish event
+      if (this.eventBus) {
+        const cid = correlationId || randomUUID();
+        const event = createProductCreatedEvent(cid, {
+          productId: product._id.toString(),
+          name: product.name,
+          sku: product.sku,
+          categoryId: product.category,
+          price: product.price,
+        });
+        try {
+          await this.eventBus.publish(event.type, event.payload, event.correlationId);
+        } catch (publishError) {
+          this.logger.error('Failed to publish product.created event', {
+            error: publishError instanceof Error ? publishError.message : String(publishError),
+            productId: product._id.toString(),
+          });
+        }
+      }
+
       return product;
     } catch (error) {
+      if (error instanceof ValidationError || error instanceof ConflictError) {
+        throw error;
+      }
       throw new DatabaseError(`Failed to create product: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  async updateProduct(id: string, dto: UpdateProductDto): Promise<any> {
+  async updateProduct(id: string, dto: UpdateProductDto, correlationId?: string): Promise<any> {
     // 1. Validate DTO (allow partial)
     const validationResult = updateProductSchema.safeParse(dto);
     if (!validationResult.success) {
@@ -60,9 +92,118 @@ export class ProductService {
     // 4. Update product
     try {
       const product = await this.repository.update(id, validatedDto);
+      if (!product) {
+        throw new NotFoundError(`Product with ID '${id}' not found`);
+      }
+
+      // Publish event
+      if (this.eventBus) {
+        const cid = correlationId || randomUUID();
+        const event = createProductUpdatedEvent(cid, {
+          productId: product._id.toString(),
+          name: product.name,
+          sku: product.sku,
+          categoryId: product.category,
+          price: product.price,
+          isActive: product.isActive,
+        });
+        try {
+          await this.eventBus.publish(event.type, event.payload, event.correlationId);
+        } catch (publishError) {
+          this.logger.error('Failed to publish product.updated event', {
+            error: publishError instanceof Error ? publishError.message : String(publishError),
+            productId: product._id.toString(),
+          });
+        }
+      }
+
       return product;
     } catch (error) {
+      if (error instanceof NotFoundError || error instanceof ValidationError || error instanceof ConflictError) {
+        throw error;
+      }
       throw new DatabaseError(`Failed to update product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async deleteProduct(id: string, deletedBy: string, correlationId?: string): Promise<any> {
+    const existing = await this.repository.findById(id);
+    if (!existing) {
+      throw new NotFoundError(`Product with ID '${id}' not found`);
+    }
+
+    try {
+      const product = await this.repository.delete(id, deletedBy);
+      if (!product) {
+        throw new NotFoundError(`Product with ID '${id}' not found`);
+      }
+
+      // Publish event
+      if (this.eventBus) {
+        const cid = correlationId || randomUUID();
+        const event = createProductDeletedEvent(cid, {
+          productId: product._id.toString(),
+          deletedBy,
+        });
+        try {
+          await this.eventBus.publish(event.type, event.payload, event.correlationId);
+        } catch (publishError) {
+          this.logger.error('Failed to publish product.deleted event', {
+            error: publishError instanceof Error ? publishError.message : String(publishError),
+            productId: product._id.toString(),
+          });
+        }
+      }
+
+      return product;
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new DatabaseError(`Failed to delete product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async listProducts(query: Partial<ListProductsQueryDto>): Promise<any> {
+    const validationResult = listProductsQuerySchema.safeParse(query);
+    if (!validationResult.success) {
+      throw new ValidationError(
+        `Invalid query parameters: ${JSON.stringify(validationResult.error.errors)}`
+      );
+    }
+
+    const validatedQuery = validationResult.data;
+
+    try {
+      const { data, total } = await this.repository.findAll(validatedQuery);
+      const totalPages = validatedQuery.limit > 0 ? Math.ceil(total / validatedQuery.limit) : 0;
+
+      return {
+        data,
+        pagination: {
+          page: validatedQuery.page,
+          limit: validatedQuery.limit,
+          total,
+          totalPages,
+        },
+      };
+    } catch (error) {
+      throw new DatabaseError(`Failed to list products: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  async getProductDetail(id: string): Promise<any> {
+    try {
+      const product = await this.repository.findById(id);
+      if (!product) {
+        throw new NotFoundError(`Product with ID '${id}' not found`);
+      }
+      return product;
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      throw new DatabaseError(`Failed to retrieve product detail: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

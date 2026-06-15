@@ -1,4 +1,4 @@
-import { Product } from '../../shared-types/src';
+import { Product } from '@inventory/shared-types';
 
 export interface ProductCreatedPayload {
   product: Product;

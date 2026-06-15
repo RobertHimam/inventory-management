@@ -9,6 +9,7 @@ export interface User {
   updatedAt: Date;
   deletedAt: Date | null;
   deletedBy: string | null;
+  passwordHash?: string;
 }
 
 export interface CreateUserDto {

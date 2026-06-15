@@ -1,4 +1,3 @@
-import { Role } from '@inventory/shared-types';
 
 export class AppError extends Error {
   public readonly statusCode: number;

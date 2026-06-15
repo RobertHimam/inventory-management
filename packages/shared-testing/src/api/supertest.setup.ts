@@ -1,19 +1,18 @@
-import supertest, { SuperTest } from 'supertest';
-import type { Application } from 'express';
-import { Db } from 'mongodb';
+import supertest from 'supertest';
+import type { Db } from 'mongodb';
 
 /**
  * Setup supertest for an Express application with test database integration
  *
- * @param app - Express application instance
+ * @param app - Express application instance (any type to avoid strict Express typing issues)
  * @returns Test agent configured for the app
  */
-export function setupSupertest(app: Application): SuperTest<Application> {
+export function setupSupertest(app: any): any {
   return supertest(app);
 }
 
 export interface TestAppSetup {
-  agent: SuperTest<Application>;
+  agent: any;
   db: Db;
   clearDB: () => Promise<void>;
 }
@@ -24,7 +23,7 @@ export interface TestAppSetup {
  * @param app - Express application instance
  * @returns Object with agent and helper functions
  */
-export async function createTestSetup(app: Application): Promise<TestAppSetup> {
+export async function createTestSetup(app: any): Promise<TestAppSetup> {
   const agent = supertest(app);
   const db = await import('../helpers/db.helper').then((m) => m.getDatabase());
 
@@ -50,6 +49,6 @@ export async function createTestSetup(app: Application): Promise<TestAppSetup> {
  * @param app - Express application instance
  * @returns Configured supertest agent
  */
-export function createCleanTestAgent(app: Application): SuperTest<Application> {
+export function createCleanTestAgent(app: any): any {
   return supertest.agent(app);
 }

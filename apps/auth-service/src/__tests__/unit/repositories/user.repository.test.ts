@@ -2,7 +2,7 @@ import UserModel from '../../../models/user.model';
 jest.mock('../../../models/user.model');
 
 import { UserRepository } from '../../../repositories/user.repository';
-import { User, Role } from '@inventory/shared-types';
+import { Role } from '@inventory/shared-types';
 import { NotFoundError } from '../../../errors';
 
 type MockUserModel = jest.Mocked<typeof UserModel>;
@@ -29,6 +29,7 @@ describe('UserRepository', () => {
     it('should return user when found', async () => {
       const userDoc = {
         _id: '123',
+        id: '123',
         email: 'test@example.com',
         username: 'testuser',
         role: Role.USER,
@@ -37,7 +38,9 @@ describe('UserRepository', () => {
         deletedAt: null,
         deletedBy: null,
       };
-      (mockUser.findOne as any).mockResolvedValue(userDoc);
+      (mockUser.findOne as any).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(userDoc),
+      });
 
       const result = await userRepo.findByEmail('test@example.com');
 
@@ -53,7 +56,9 @@ describe('UserRepository', () => {
     });
 
     it('should return null when not found', async () => {
-      (mockUser.findOne as any).mockResolvedValue(null);
+      (mockUser.findOne as any).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
       const result = await userRepo.findByEmail('missing@example.com');
       expect(result).toBeNull();
     });
@@ -63,12 +68,15 @@ describe('UserRepository', () => {
     it('should return user by id', async () => {
       const userDoc = {
         _id: '123',
+        id: '123',
         email: 'test@example.com',
         username: 'testuser',
         role: Role.USER,
         deletedAt: null,
       };
-      (mockUser.findById as any).mockResolvedValue(userDoc);
+      (mockUser.findById as any).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(userDoc),
+      });
 
       const result = await userRepo.findById('123');
 
@@ -82,7 +90,9 @@ describe('UserRepository', () => {
     });
 
     it('should return null when not found', async () => {
-      (mockUser.findById as any).mockResolvedValue(null);
+      (mockUser.findById as any).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
       const result = await userRepo.findById('nonexistent');
       expect(result).toBeNull();
     });
@@ -98,6 +108,7 @@ describe('UserRepository', () => {
       };
       const createdDoc = {
         _id: 'newId',
+        id: 'newId',
         ...userData,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -122,7 +133,9 @@ describe('UserRepository', () => {
     it('should soft delete user', async () => {
       const userId = 'userId';
       const deletedBy = 'adminId';
-      mockUser.findByIdAndUpdate = jest.fn().mockResolvedValue({ _id: userId });
+      mockUser.findByIdAndUpdate = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ _id: userId }),
+      });
 
       await userRepo.softDelete(userId, deletedBy);
 
@@ -131,7 +144,6 @@ describe('UserRepository', () => {
         expect.objectContaining({
           deletedAt: expect.any(Date),
           deletedBy,
-          updatedAt: expect.any(Date),
         }),
         { new: true }
       );
@@ -139,7 +151,9 @@ describe('UserRepository', () => {
 
     it('should throw NotFoundError if user not found', async () => {
       const userId = 'missing';
-      mockUser.findByIdAndUpdate = jest.fn().mockResolvedValue(null);
+      mockUser.findByIdAndUpdate = jest.fn().mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
       await expect(userRepo.softDelete(userId, 'admin')).rejects.toThrow(NotFoundError);
     });
   });

@@ -7,7 +7,7 @@ jest.mock('../../../models/product.model', () => {
   const findOneMock = jest.fn();
   const findMock = jest.fn();
   const findByIdAndUpdateMock = jest.fn();
-  const findByIdAndDeleteMock = jest.fn();
+  const countDocumentsMock = jest.fn();
 
   const MockProductModel = jest.fn() as any;
 
@@ -16,7 +16,7 @@ jest.mock('../../../models/product.model', () => {
   MockProductModel.findOne = findOneMock;
   MockProductModel.find = findMock;
   MockProductModel.findByIdAndUpdate = findByIdAndUpdateMock;
-  MockProductModel.findByIdAndDelete = findByIdAndDeleteMock;
+  MockProductModel.countDocuments = countDocumentsMock;
 
   return {
     __esModule: true,
@@ -36,7 +36,7 @@ describe('ProductRepository', () => {
     (ProductModel as any).findOne = jest.fn();
     (ProductModel as any).find = jest.fn();
     (ProductModel as any).findByIdAndUpdate = jest.fn();
-    (ProductModel as any).findByIdAndDelete = jest.fn();
+    (ProductModel as any).countDocuments = jest.fn();
 
     repository = new ProductRepository();
   });
@@ -82,7 +82,7 @@ describe('ProductRepository', () => {
   });
 
   describe('findById', () => {
-    it('should find product by id', async () => {
+    it('should find active product by id and filter out soft deleted ones', async () => {
       const mockProductDoc = {
         _id: '123',
         name: 'Test',
@@ -92,20 +92,21 @@ describe('ProductRepository', () => {
         stockQuantity: 5,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       } as any;
 
-      (ProductModel.findById as jest.Mock).mockReturnValue({
+      (ProductModel.findOne as jest.Mock).mockReturnValue({
         exec: jest.fn().mockResolvedValue(mockProductDoc),
       });
 
       const result = await repository.findById('123');
 
-      expect(ProductModel.findById).toHaveBeenCalledWith('123');
+      expect(ProductModel.findOne).toHaveBeenCalledWith({ _id: '123', deletedAt: null });
       expect(result).toEqual(mockProductDoc);
     });
 
     it('should return null when product not found', async () => {
-      (ProductModel.findById as jest.Mock).mockReturnValue({
+      (ProductModel.findOne as jest.Mock).mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
 
@@ -148,35 +149,60 @@ describe('ProductRepository', () => {
   });
 
   describe('findAll', () => {
-    it('should fetch products with limit and offset', async () => {
-      const mockProducts = [{ _id: '1' }, { _id: '2' }] as any[];
-
+    it('should fetch products with default pagination and filter out soft deleted ones', async () => {
+      const mockProducts = [{ _id: '1' }] as any[];
       const mockQuery = {
+        sort: jest.fn().mockReturnThis(),
         skip: jest.fn().mockReturnThis(),
         limit: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue(mockProducts),
       };
       (ProductModel.find as jest.Mock).mockReturnValue(mockQuery);
+      (ProductModel.countDocuments as jest.Mock).mockResolvedValue(5);
 
-      const result = await repository.findAll(10, 5);
+      const result = await repository.findAll({});
 
-      expect(ProductModel.find).toHaveBeenCalled();
-      expect(mockQuery.skip).toHaveBeenCalledWith(5);
+      expect(ProductModel.find).toHaveBeenCalledWith({ deletedAt: null });
+      expect(ProductModel.countDocuments).toHaveBeenCalledWith({ deletedAt: null });
+      expect(mockQuery.sort).toHaveBeenCalledWith({ createdAt: -1 });
+      expect(mockQuery.skip).toHaveBeenCalledWith(0);
       expect(mockQuery.limit).toHaveBeenCalledWith(10);
-      expect(result).toEqual(mockProducts);
+      expect(result).toEqual({ data: mockProducts, total: 5 });
     });
 
-    it('should fetch all products when no limit', async () => {
+    it('should apply page, limit, search, sort, and order parameters', async () => {
       const mockProducts = [{ _id: '1' }] as any[];
-
-      (ProductModel.find as jest.Mock).mockReturnValue({
+      const mockQuery = {
+        sort: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
         exec: jest.fn().mockResolvedValue(mockProducts),
+      };
+      (ProductModel.find as jest.Mock).mockReturnValue(mockQuery);
+      (ProductModel.countDocuments as jest.Mock).mockResolvedValue(12);
+
+      const result = await repository.findAll({
+        page: 3,
+        limit: 5,
+        search: 'phone',
+        sort: 'price',
+        order: 'asc',
       });
 
-      const result = await repository.findAll();
+      const expectedFilter = {
+        deletedAt: null,
+        $or: [
+          { name: { $regex: 'phone', $options: 'i' } },
+          { sku: { $regex: 'phone', $options: 'i' } },
+        ],
+      };
 
-      expect(ProductModel.find).toHaveBeenCalled();
-      expect(result).toEqual(mockProducts);
+      expect(ProductModel.find).toHaveBeenCalledWith(expectedFilter);
+      expect(ProductModel.countDocuments).toHaveBeenCalledWith(expectedFilter);
+      expect(mockQuery.sort).toHaveBeenCalledWith({ price: 1 });
+      expect(mockQuery.skip).toHaveBeenCalledWith(10);
+      expect(mockQuery.limit).toHaveBeenCalledWith(5);
+      expect(result).toEqual({ data: mockProducts, total: 12 });
     });
   });
 
@@ -215,23 +241,31 @@ describe('ProductRepository', () => {
   });
 
   describe('delete', () => {
-    it('should return true when product deleted', async () => {
-      (ProductModel.findByIdAndDelete as jest.Mock).mockReturnValue({
-        exec: jest.fn().mockResolvedValue({ _id: '123' }),
+    it('should soft delete product by setting deletedAt and deletedBy', async () => {
+      const now = new Date();
+      const deletedBy = 'user-123';
+      (ProductModel.findByIdAndUpdate as jest.Mock).mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ _id: '123', deletedAt: now, deletedBy }),
       });
 
-      const result = await repository.delete('123');
-      expect(ProductModel.findByIdAndDelete).toHaveBeenCalledWith('123');
-      expect(result).toBe(true);
+      const result = await repository.delete('123', deletedBy);
+
+      expect(ProductModel.findByIdAndUpdate).toHaveBeenCalledWith(
+        '123',
+        { deletedAt: expect.any(Date), deletedBy },
+        { new: true }
+      );
+      expect(result).toHaveProperty("_id");
+      expect(result).toHaveProperty("deletedBy", deletedBy);
     });
 
-    it('should return false when product not found on delete', async () => {
-      (ProductModel.findByIdAndDelete as jest.Mock).mockReturnValue({
+    it('should return false when product not found', async () => {
+      (ProductModel.findByIdAndUpdate as jest.Mock).mockReturnValue({
         exec: jest.fn().mockResolvedValue(null),
       });
 
-      const result = await repository.delete('nonexistent');
-      expect(result).toBe(false);
+      const result = await repository.delete('nonexistent', 'user-123');
+      expect(result).toBeNull();
     });
   });
 });

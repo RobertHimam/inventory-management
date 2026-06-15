@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
-import { randomUUID } from 'crypto';
 
-export const correlationMiddleware = (req: any, _res: Response, next: NextFunction) => {
-  req.correlationId = (req.headers['x-correlation-id'] as string) || randomUUID();
+export const correlationMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+  const correlationId = req.headers['x-correlation-id']?.toString() ?? crypto.randomUUID();
+  res.set('x-correlation-id', correlationId);
+  (req as any).correlationId = correlationId;
   next();
 };

@@ -3,9 +3,9 @@ import '../models/refreshToken.model';
 import mongoose from 'mongoose';
 import app from './app';
 import { config } from './config';
-import { Logger } from '@inventory/shared-logger';
+import { createLogger } from '@inventory/shared-logger';
 
-const logger = new Logger({ service: 'auth-service' });
+const logger = createLogger({ level: 'info' });
 
 async function start() {
   try {
@@ -17,7 +17,7 @@ async function start() {
       logger.info(`Auth service listening on port ${config.port}`);
     });
   } catch (err) {
-    logger.error('Failed to start service', err as Error);
+    logger.error('Failed to start service', { error: err instanceof Error ? err.message : String(err) });
     process.exit(1);
   }
 }

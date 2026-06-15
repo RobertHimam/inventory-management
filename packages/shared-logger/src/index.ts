@@ -1,6 +1,6 @@
 import pino from 'pino';
 
-interface Logger {
+export interface Logger {
   setCorrelationId(id: string): void;
   info(message: string, meta?: Record<string, unknown>): void;
   warn(message: string, meta?: Record<string, unknown>): void;
@@ -37,7 +37,15 @@ export function createLogger(options?: { level?: string; correlationId?: string 
   function log(lvl: string, msg: string, meta?: Record<string, unknown>) {
     if (!shouldLog(lvl)) return;
     const entry = buildEntry(lvl, msg, meta);
-    pinoLogger.write(entry);
+    if (lvl === 'error') {
+      pinoLogger.error(entry);
+    } else if (lvl === 'warn') {
+      pinoLogger.warn(entry);
+    } else if (lvl === 'debug') {
+      pinoLogger.debug(entry);
+    } else {
+      pinoLogger.info(entry);
+    }
   }
 
   return {

@@ -11,7 +11,20 @@ import { AuthenticationError, ConflictError } from '../../../errors';
 
 jest.mock('bcrypt');
 jest.mock('@inventory/shared-auth');
-jest.mock('../../../config');
+jest.mock('../../../config', () => ({
+  config: {
+    nodeEnv: 'test',
+    port: 3000,
+    mongodbUri: 'mongodb://localhost:27017',
+    authDb: 'auth-test',
+    jwtSecret: 'test_jwt_secret',
+    jwtRefreshSecret: 'test_refresh_secret',
+    jwtExpiresIn: '900',
+    jwtRefreshExpiresIn: '604800',
+    rabbitmqUrl: 'amqp://localhost',
+    rabbitmqExchange: 'inventory-exchange',
+  },
+}));
 
 const mockedCreateAccessToken = createAccessToken as jest.MockedFunction<typeof createAccessToken>;
 const mockedCreateRefreshToken = createRefreshToken as jest.MockedFunction<typeof createRefreshToken>;
@@ -56,7 +69,13 @@ describe('AuthService', () => {
 
     mockedCreateAccessToken.mockReturnValue('access_token');
     mockedCreateRefreshToken.mockReturnValue('refresh_token');
-    mockedVerifyRefreshToken.mockReturnValue({ sub: 'user_id', username: 'testuser', role: Role.USER, jti: 'jti' });
+    mockedVerifyRefreshToken.mockReturnValue({
+      sub: 'user_id',
+      username: 'testuser',
+      role: Role.USER,
+      jti: 'jti',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    });
 
     authService = new AuthService(
       userRepo as any,
@@ -107,15 +126,14 @@ describe('AuthService', () => {
         })
       );
       expect(eventBus.publish).toHaveBeenCalledWith(
+        'user.created',
         expect.objectContaining({
-          type: 'user.created',
-          payload: expect.objectContaining({
-            userId: userId,
-            email,
-            username,
-            role,
-          }),
-        })
+          userId: 'user_id_123',
+          email,
+          username,
+          role,
+        }),
+        expect.any(String)
       );
     });
 
@@ -139,6 +157,7 @@ describe('AuthService', () => {
       updatedAt: new Date(),
       deletedAt: null,
       deletedBy: null,
+      passwordHash: 'hashed_password',
     };
 
     beforeEach(() => {
@@ -202,7 +221,13 @@ describe('AuthService', () => {
     const refreshTokenRecord = { userId, jti, expiresAt };
 
     beforeEach(() => {
-      mockedVerifyRefreshToken.mockReturnValue({ sub: userId, username: 'testuser', role: Role.USER, jti });
+      mockedVerifyRefreshToken.mockReturnValue({
+        sub: userId,
+        username: 'testuser',
+        role: Role.USER,
+        jti,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      });
     });
 
     it('should return new access token and rotate refresh token', async () => {
@@ -242,7 +267,13 @@ describe('AuthService', () => {
   describe('logout', () => {
     it('should revoke refresh token', async () => {
       const jti = 'jti_to_revoke';
-      refreshRepo.findByJti.mockResolvedValue({ jti, userId: 'user_id', expiresAt: new Date() });
+      mockedVerifyRefreshToken.mockReturnValue({
+        sub: 'user_id',
+        username: 'testuser',
+        role: Role.USER,
+        jti,
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      });
 
       await authService.logout('token');
 

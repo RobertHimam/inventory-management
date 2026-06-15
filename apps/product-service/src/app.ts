@@ -3,7 +3,6 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { config } from './config';
 import { correlationMiddleware } from './middleware/correlation.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
 import productRoutes from './routes/product.routes';
@@ -34,7 +33,7 @@ export const createApp = (): Application => {
   app.use(errorMiddleware);
 
   // 404 handler
-  app.use('*', (req, res) => {
+  app.use('*', (_req, res) => {
     res.status(404).json({
       success: false,
       error: 'Route not found',

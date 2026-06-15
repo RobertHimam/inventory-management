@@ -8,6 +8,8 @@ export interface IProduct extends Document {
   category: string;
   stockQuantity: number;
   isActive: boolean;
+  deletedAt: Date | null;
+  deletedBy: string | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +53,14 @@ const ProductSchema: Schema = new Schema(
     isActive: {
       type: Boolean,
       default: true,
+    },
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+    deletedBy: {
+      type: String,
+      default: null,
     },
   },
   {

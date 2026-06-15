@@ -1,6 +1,6 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 
-const swaggerDefinition = {
+export const swaggerDefinition = {
   openapi: '3.0.0',
   info: {
     title: 'Product Service API',
@@ -8,6 +8,15 @@ const swaggerDefinition = {
   },
   servers: [{ url: '/api/v1' }],
   tags: [{ name: 'Products', description: 'Product operations' }],
+  components: {
+    securitySchemes: {
+      BearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+    },
+  },
 };
 
 const options = {

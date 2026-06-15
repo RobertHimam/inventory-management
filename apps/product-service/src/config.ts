@@ -17,6 +17,7 @@ const required = [
   'PRODUCT_DB',
   'RABBITMQ_URL',
   'RABBITMQ_EXCHANGE',
+  'JWT_SECRET',
 ];
 
 const missing = required.filter((key) => !process.env[key]);
@@ -31,4 +32,5 @@ export const config = {
   productDb: process.env.PRODUCT_DB!,
   rabbitmqUrl: process.env.RABBITMQ_URL!,
   rabbitmqExchange: process.env.RABBITMQ_EXCHANGE!,
+  jwtSecret: process.env.JWT_SECRET!,
 };

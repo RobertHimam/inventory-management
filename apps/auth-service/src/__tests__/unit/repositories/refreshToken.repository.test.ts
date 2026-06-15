@@ -33,14 +33,18 @@ describe('RefreshTokenRepository', () => {
   describe('findByJti', () => {
     it('should return token by jti', async () => {
       const token = { userId: 'u1', jti: 'j1', expiresAt: new Date() };
-      (mockModel.findOne as any).mockResolvedValue(token);
+      (mockModel.findOne as any).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(token),
+      });
       const result = await repo.findByJti('j1');
       expect(mockModel.findOne).toHaveBeenCalledWith({ jti: 'j1' });
       expect(result).toEqual(token);
     });
 
     it('should return null if not found', async () => {
-      (mockModel.findOne as any).mockResolvedValue(null);
+      (mockModel.findOne as any).mockReturnValue({
+        exec: jest.fn().mockResolvedValue(null),
+      });
       const result = await repo.findByJti('missing');
       expect(result).toBeNull();
     });
@@ -48,7 +52,9 @@ describe('RefreshTokenRepository', () => {
 
   describe('deleteByJti', () => {
     it('should delete token by jti', async () => {
-      (mockModel.deleteOne as any).mockResolvedValue({ deletedCount: 1 });
+      (mockModel.deleteOne as any).mockReturnValue({
+        exec: jest.fn().mockResolvedValue({ deletedCount: 1 }),
+      });
       await repo.deleteByJti('j1');
       expect(mockModel.deleteOne).toHaveBeenCalledWith({ jti: 'j1' });
     });

@@ -49,9 +49,11 @@ export class AuthService implements IAuthService {
       role: user.role,
     });
     try {
-      await this.eventBus.publish(event);
+      await this.eventBus.publish(event.type, event.payload, event.correlationId);
     } catch (err) {
-      this.logger.error('Failed to publish user.created event', err as Error);
+      this.logger.error('Failed to publish user.created event', {
+        error: err instanceof Error ? err.message : String(err),
+      });
       // continue
     }
 
@@ -61,10 +63,10 @@ export class AuthService implements IAuthService {
   async login(
     email: string,
     password: string,
-    correlationId?: string
+    _correlationId?: string
   ): Promise<{ user: User; accessToken: string; refreshToken: string }> {
     const user = await this.userRepo.findByEmail(email);
-    if (!user) throw new AuthenticationError('Invalid credentials');
+    if (!user || !user.passwordHash) throw new AuthenticationError('Invalid credentials');
 
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new AuthenticationError('Invalid credentials');
@@ -82,6 +84,7 @@ export class AuthService implements IAuthService {
     );
     const refreshToken = createRefreshToken(
       payload,
+      this.cfg.jwtRefreshSecret,
       Number(this.cfg.jwtRefreshExpiresIn)
     );
 
@@ -89,7 +92,7 @@ export class AuthService implements IAuthService {
       refreshToken,
       this.cfg.jwtRefreshSecret
     );
-    if (!decoded) throw new AuthenticationError('Failed to verify refresh token');
+    if (!decoded || !decoded.exp) throw new AuthenticationError('Failed to verify refresh token');
 
     await this.refreshTokenRepo.save({
       userId: user.id,
@@ -102,7 +105,7 @@ export class AuthService implements IAuthService {
 
   async refresh(
     refreshTokenStr: string,
-    correlationId?: string
+    _correlationId?: string
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const payload = verifyRefreshToken(
       refreshTokenStr,
@@ -125,6 +128,7 @@ export class AuthService implements IAuthService {
     );
     const newRefreshToken = createRefreshToken(
       newPayload,
+      this.cfg.jwtRefreshSecret,
       Number(this.cfg.jwtRefreshExpiresIn)
     );
 
@@ -133,7 +137,7 @@ export class AuthService implements IAuthService {
       newRefreshToken,
       this.cfg.jwtRefreshSecret
     );
-    if (!newDecoded)
+    if (!newDecoded || !newDecoded.exp)
       throw new AuthenticationError('Failed to verify new refresh token');
     await this.refreshTokenRepo.save({
       userId: payload.sub,
@@ -146,7 +150,7 @@ export class AuthService implements IAuthService {
 
   async logout(
     refreshTokenStr: string,
-    correlationId?: string
+    _correlationId?: string
   ): Promise<void> {
     const payload = verifyRefreshToken(
       refreshTokenStr,

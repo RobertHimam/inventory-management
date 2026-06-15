@@ -16,6 +16,7 @@ describe('RabbitMQConnection', () => {
       bindQueue: jest.fn(),
       consume: jest.fn(),
       publish: jest.fn(),
+      ack: jest.fn(),
       nack: jest.fn(),
     };
     (amqp.connect as jest.Mock).mockResolvedValue(mockConnection);
@@ -67,6 +68,7 @@ describe('EventBus', () => {
       consume: jest.fn(),
       publish: jest.fn(),
       close: jest.fn(),
+      ack: jest.fn(),
       nack: jest.fn(),
     };
     const stubConn = {
@@ -111,7 +113,8 @@ describe('EventBus', () => {
     expect(mockChannel.bindQueue).toHaveBeenNthCalledWith(
       1,
       'test.exchange.ProductCreated.queue.dlq',
-      'test.exchange.dlx'
+      'test.exchange.dlx',
+      ''
     );
     // Main exchange and queue
     expect(mockChannel.assertExchange).toHaveBeenNthCalledWith(2, 'test.exchange', 'topic', {
@@ -152,7 +155,7 @@ describe('EventBus', () => {
     } as any;
     consumeCb(msg);
     expect(handler).toHaveBeenCalledWith(msgContent, {}, undefined);
-    expect(msg.ack).toHaveBeenCalled();
+    expect(mockChannel.ack).toHaveBeenCalledWith(msg);
   });
 
   it('subscribing passes headers from message to handler', async () => {
@@ -169,7 +172,7 @@ describe('EventBus', () => {
     } as any;
     consumeCb(msg);
     expect(handler).toHaveBeenCalledWith(msgContent, headers, 'abc');
-    expect(msg.ack).toHaveBeenCalled();
+    expect(mockChannel.ack).toHaveBeenCalledWith(msg);
   });
 
   it('nacks on handler error', async () => {
@@ -185,7 +188,7 @@ describe('EventBus', () => {
     } as any;
     consumeCb(msg);
     expect(handler).toHaveBeenCalled();
-    expect(msg.nack).toHaveBeenCalledWith(false, false);
+    expect(mockChannel.nack).toHaveBeenCalledWith(msg, false, false);
   });
 
   it('nacks message with malformed JSON and logs error', async () => {
@@ -202,7 +205,7 @@ describe('EventBus', () => {
     const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     consumeCb(msg);
     expect(handler).not.toHaveBeenCalled();
-    expect(msg.nack).toHaveBeenCalledWith(false, false);
+    expect(mockChannel.nack).toHaveBeenCalledWith(msg, false, false);
     expect(consoleSpy).toHaveBeenCalledWith(
       'Malformed JSON in message',
       expect.objectContaining({

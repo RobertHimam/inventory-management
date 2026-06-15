@@ -1,16 +1,13 @@
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import authRoutes from './routes/auth.routes';
 import healthRoutes from './routes/health.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 import { correlationMiddleware } from './middleware/correlation.middleware';
-import { config } from './config';
 import { setupSwagger } from './swagger/docs';
-import { Logger } from '@inventory/shared-logger';
 
-const app = express();
-const logger = new Logger({ service: 'auth-service' });
+const app: Express = express();
 
 app.use(cors());
 app.use(express.json());

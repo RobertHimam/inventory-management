@@ -4,23 +4,31 @@ import { registerSchema, loginSchema } from '@inventory/shared-auth';
 import { ValidationError } from '../errors';
 import { UserRepository } from '../repositories/user.repository';
 import { RefreshTokenRepository } from '../repositories/refreshToken.repository';
-import { EventBus } from '@inventory/shared-rabbitmq';
-import { Logger } from '@inventory/shared-logger';
+import { EventBus, RabbitMQConnection } from '@inventory/shared-rabbitmq';
+import { createLogger } from '@inventory/shared-logger';
 import { config } from '../config';
 import { AuthService } from '../services/auth.service';
 
-const router = Router();
+const router: Router = Router();
 
 // Dependency setup
+const logger = createLogger({ level: 'info' });
 const userRepo = new UserRepository();
 const refreshRepo = new RefreshTokenRepository();
-const eventBus = EventBus.create();
-const logger = new Logger({ service: 'auth-service' });
+
+const rabbitConn = new RabbitMQConnection(config.rabbitmqUrl);
+rabbitConn.connect().catch((err) => {
+  logger.error('Failed to connect to RabbitMQ', {
+    error: err instanceof Error ? err.message : String(err),
+  });
+});
+const eventBus = new EventBus(rabbitConn, config.rabbitmqExchange);
+
 const authService = new AuthService(userRepo, refreshRepo, eventBus, logger, config);
 const authController = new AuthController(authService);
 
 // Validation middleware
-const validate = (schema: any) => (req: any, res: any, next: any) => {
+const validate = (schema: any) => (req: any, _res: any, next: any) => {
   try {
     schema.parse(req.body);
     next();

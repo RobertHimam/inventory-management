@@ -2,7 +2,7 @@ import * as amqp from 'amqplib';
 
 export class RabbitMQConnection {
   private url: string;
-  private connection?: amqp.Connection;
+  private connection?: amqp.ChannelModel;
   private channel?: amqp.Channel;
 
   constructor(url: string) {
@@ -10,7 +10,7 @@ export class RabbitMQConnection {
   }
 
   async connect(): Promise<void> {
-    let conn: amqp.Connection;
+    let conn: amqp.ChannelModel | null = null;
     try {
       conn = await amqp.connect(this.url);
       const channel = await conn.createChannel();
@@ -70,7 +70,7 @@ export class EventBus {
     // Declare DLX and DLQ
     await channel.assertExchange(this.dlxExchange, 'fanout', { durable: true });
     await channel.assertQueue(`${queue}.dlq`, { durable: true });
-    await channel.bindQueue(`${queue}.dlq`, this.dlxExchange);
+    await channel.bindQueue(`${queue}.dlq`, this.dlxExchange, '');
 
     // Declare main exchange and queue with DLX argument
     await channel.assertExchange(this.exchange, 'topic', { durable: true });
@@ -82,7 +82,7 @@ export class EventBus {
       },
     });
     await channel.bindQueue(queue, this.exchange, routingKey);
-    await channel.consume(queue, (msg: amqp.Message | null) => {
+    await channel.consume(queue, (msg) => {
       if (!msg) return;
       try {
         const content = msg.content.toString();
@@ -90,9 +90,14 @@ export class EventBus {
         const headers = msg.properties?.headers || {};
         const correlationId = headers['X-Correlation-ID'] as string | undefined;
         handler(payload, headers, correlationId);
-        msg.ack();
+        channel.ack(msg);
       } catch (err) {
-        msg.nack(false, false);
+        console.error('Malformed JSON in message', {
+          queue,
+          error: err,
+          content: msg.content.toString(),
+        });
+        channel.nack(msg, false, false);
       }
     });
   }

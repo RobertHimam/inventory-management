@@ -15,3 +15,13 @@ export type CreateProductDto = z.infer<typeof createProductSchema>;
 export const updateProductSchema = createProductSchema.partial();
 
 export type UpdateProductDto = z.infer<typeof updateProductSchema>;
+
+export const listProductsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().default(10),
+  search: z.string().optional(),
+  sort: z.string().default('createdAt'),
+  order: z.enum(['asc', 'desc']).default('desc'),
+});
+
+export type ListProductsQueryDto = z.infer<typeof listProductsQuerySchema>;
