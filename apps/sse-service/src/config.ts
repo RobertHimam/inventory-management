@@ -10,7 +10,7 @@ function getInt(key: string): number {
   return num;
 }
 
-const required = ['NODE_ENV', 'PORT', 'RABBITMQ_URL', 'JWT_SECRET'];
+const required = ['NODE_ENV', 'PORT', 'RABBITMQ_URL', 'JWT_SECRET', 'RABBITMQ_EXCHANGE'];
 
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length > 0) {
@@ -22,4 +22,5 @@ export const config = {
   port: getInt('PORT'),
   rabbitmqUrl: process.env.RABBITMQ_URL!,
   jwtSecret: process.env.JWT_SECRET!,
+  rabbitmqExchange: process.env.RABBITMQ_EXCHANGE!,
 };
