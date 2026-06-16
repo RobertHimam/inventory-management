@@ -10,9 +10,12 @@ export class ProductController {
     try {
       const productData = req.body;
       const correlationId = (req as any).correlationId;
-      const product = correlationId
-        ? await this.productService.createProduct(productData, correlationId)
-        : await this.productService.createProduct(productData);
+      const user = (req as any).user;
+      const product = user
+        ? await this.productService.createProduct(productData, correlationId, user)
+        : correlationId
+          ? await this.productService.createProduct(productData, correlationId)
+          : await this.productService.createProduct(productData);
 
       res.status(201).json({
         success: true,
@@ -38,9 +41,12 @@ export class ProductController {
       const productId = req.params.id;
       const updateData = req.body;
       const correlationId = (req as any).correlationId;
-      const product = correlationId
-        ? await this.productService.updateProduct(productId, updateData, correlationId)
-        : await this.productService.updateProduct(productId, updateData);
+      const user = (req as any).user;
+      const product = user
+        ? await this.productService.updateProduct(productId, updateData, correlationId, user)
+        : correlationId
+          ? await this.productService.updateProduct(productId, updateData, correlationId)
+          : await this.productService.updateProduct(productId, updateData);
 
       res.status(200).json({
         success: true,
@@ -62,11 +68,14 @@ export class ProductController {
   async deleteProduct(req: Request<{ id: string }>, res: Response): Promise<void> {
     try {
       const productId = req.params.id;
-      const deletedBy = (req as any).user?.userId || 'unknown';
+      const user = (req as any).user;
+      const deletedBy = user?.userId || 'unknown';
       const correlationId = (req as any).correlationId;
-      const product = correlationId
-        ? await this.productService.deleteProduct(productId, deletedBy, correlationId)
-        : await this.productService.deleteProduct(productId, deletedBy);
+      const product = user
+        ? await this.productService.deleteProduct(productId, deletedBy, correlationId, user)
+        : correlationId
+          ? await this.productService.deleteProduct(productId, deletedBy, correlationId)
+          : await this.productService.deleteProduct(productId, deletedBy);
 
       res.status(200).json({
         success: true,

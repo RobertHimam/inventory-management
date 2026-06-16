@@ -1,5 +1,5 @@
 {
-  "name": "@inventory/product-service",
+  "name": "@inventory/inventory-service",
   "version": "0.1.0",
   "main": "dist/index.js",
   "type": "module",

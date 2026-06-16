@@ -248,7 +248,7 @@ describe('ProductController', () => {
 
       await controller.deleteProduct(req, res);
 
-      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'user-123');
+      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'user-123', undefined, { userId: 'user-123', role: 'ADMIN' });
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
@@ -280,7 +280,7 @@ describe('ProductController', () => {
 
       await controller.deleteProduct(req, res);
 
-      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'user-123');
+      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'user-123', undefined, { userId: 'user-123', role: 'ADMIN' });
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
@@ -296,7 +296,7 @@ describe('ProductController', () => {
 
       await controller.deleteProduct(req, res);
 
-      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'user-123');
+      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'user-123', undefined, { userId: 'user-123', role: 'ADMIN' });
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         success: false,

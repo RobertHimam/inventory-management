@@ -5,7 +5,8 @@ import { createProductSchema, updateProductSchema, listProductsQuerySchema } fro
 import { ConflictError, DatabaseError, ValidationError, NotFoundError } from '../errors';
 import { EventBus } from '@inventory/shared-rabbitmq';
 import { Logger, createLogger } from '@inventory/shared-logger';
-import { createProductCreatedEvent, createProductUpdatedEvent, createProductDeletedEvent } from '@inventory/shared-events';
+import { createProductCreatedEvent, createProductUpdatedEvent, createProductDeletedEvent, createAuditLoggedEvent } from '@inventory/shared-events';
+import { AuditAction } from '@inventory/shared-types';
 
 export class ProductService {
   constructor(
@@ -14,7 +15,7 @@ export class ProductService {
     private readonly logger: Logger = createLogger()
   ) {}
 
-  async createProduct(dto: CreateProductDto, correlationId?: string): Promise<any> {
+  async createProduct(dto: CreateProductDto, correlationId?: string, user?: any): Promise<any> {
     // 1. Validate DTO
     const validationResult = createProductSchema.safeParse(dto);
     if (!validationResult.success) {
@@ -53,6 +54,30 @@ export class ProductService {
             productId: product._id.toString(),
           });
         }
+
+        // Publish Audit Log Event
+        if (user) {
+          const auditEvent = createAuditLoggedEvent(cid, {
+            auditId: randomUUID(),
+            correlationId: cid,
+            userId: user.userId,
+            username: user.username,
+            role: user.role,
+            action: AuditAction.CREATE,
+            resourceType: 'Product',
+            resourceId: product._id.toString(),
+            before: null,
+            after: product.toObject ? product.toObject() : product,
+            metadata: { sku: product.sku },
+          });
+          try {
+            await this.eventBus.publish(auditEvent.type, auditEvent.payload, auditEvent.correlationId);
+          } catch (auditError) {
+            this.logger.error('Failed to publish audit event for product creation', {
+              error: auditError instanceof Error ? auditError.message : String(auditError),
+            });
+          }
+        }
       }
 
       return product;
@@ -64,7 +89,7 @@ export class ProductService {
     }
   }
 
-  async updateProduct(id: string, dto: UpdateProductDto, correlationId?: string): Promise<any> {
+  async updateProduct(id: string, dto: UpdateProductDto, correlationId?: string, user?: any): Promise<any> {
     // 1. Validate DTO (allow partial)
     const validationResult = updateProductSchema.safeParse(dto);
     if (!validationResult.success) {
@@ -115,6 +140,30 @@ export class ProductService {
             productId: product._id.toString(),
           });
         }
+
+        // Publish Audit Log Event
+        if (user) {
+          const auditEvent = createAuditLoggedEvent(cid, {
+            auditId: randomUUID(),
+            correlationId: cid,
+            userId: user.userId,
+            username: user.username,
+            role: user.role,
+            action: AuditAction.UPDATE,
+            resourceType: 'Product',
+            resourceId: product._id.toString(),
+            before: existing.toObject ? existing.toObject() : existing,
+            after: product.toObject ? product.toObject() : product,
+            metadata: { sku: product.sku },
+          });
+          try {
+            await this.eventBus.publish(auditEvent.type, auditEvent.payload, auditEvent.correlationId);
+          } catch (auditError) {
+            this.logger.error('Failed to publish audit event for product update', {
+              error: auditError instanceof Error ? auditError.message : String(auditError),
+            });
+          }
+        }
       }
 
       return product;
@@ -126,7 +175,7 @@ export class ProductService {
     }
   }
 
-  async deleteProduct(id: string, deletedBy: string, correlationId?: string): Promise<any> {
+  async deleteProduct(id: string, deletedBy: string, correlationId?: string, user?: any): Promise<any> {
     const existing = await this.repository.findById(id);
     if (!existing) {
       throw new NotFoundError(`Product with ID '${id}' not found`);
@@ -152,6 +201,30 @@ export class ProductService {
             error: publishError instanceof Error ? publishError.message : String(publishError),
             productId: product._id.toString(),
           });
+        }
+
+        // Publish Audit Log Event
+        if (user) {
+          const auditEvent = createAuditLoggedEvent(cid, {
+            auditId: randomUUID(),
+            correlationId: cid,
+            userId: user.userId,
+            username: user.username,
+            role: user.role,
+            action: AuditAction.DELETE,
+            resourceType: 'Product',
+            resourceId: product._id.toString(),
+            before: existing.toObject ? existing.toObject() : existing,
+            after: product.toObject ? product.toObject() : product,
+            metadata: { sku: product.sku },
+          });
+          try {
+            await this.eventBus.publish(auditEvent.type, auditEvent.payload, auditEvent.correlationId);
+          } catch (auditError) {
+            this.logger.error('Failed to publish audit event for product deletion', {
+              error: auditError instanceof Error ? auditError.message : String(auditError),
+            });
+          }
         }
       }
 

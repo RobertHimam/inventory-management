@@ -26,3 +26,66 @@ export function createStockInCreatedEvent(
     payload,
   };
 }
+
+export interface StockOutCreatedPayload {
+  stockOutId: string;
+  productId: string;
+  quantity: number;
+}
+
+export function createStockOutCreatedEvent(
+  correlationId: string,
+  payload: StockOutCreatedPayload
+): Event<StockOutCreatedPayload> {
+  return {
+    correlationId,
+    timestamp: new Date(),
+    type: VERSION.STOCK_OUT_CREATED.type,
+    version: VERSION.STOCK_OUT_CREATED.version,
+    payload,
+  };
+}
+
+export interface LowStockDetectedPayload {
+  productId: string;
+  currentQuantity: number;
+  reorderLevel: number;
+  timestamp: Date;
+}
+
+export function createLowStockDetectedEvent(
+  correlationId: string,
+  payload: LowStockDetectedPayload
+): Event<LowStockDetectedPayload> {
+  return {
+    correlationId,
+    timestamp: new Date(),
+    type: VERSION.LOW_STOCK_DETECTED.type,
+    version: VERSION.LOW_STOCK_DETECTED.version,
+    payload,
+  };
+}
+
+export interface StockAdjustmentCreatedPayload {
+  stockAdjustmentId: string;
+  productId: string;
+  quantity: number;
+  previousQuantity: number;
+  newQuantity: number;
+  reason: string;
+}
+
+export function createStockAdjustmentCreatedEvent(
+  correlationId: string,
+  payload: StockAdjustmentCreatedPayload
+): Event<StockAdjustmentCreatedPayload> {
+  return {
+    correlationId,
+    timestamp: new Date(),
+    type: VERSION.STOCK_ADJUSTMENT_CREATED.type,
+    version: VERSION.STOCK_ADJUSTMENT_CREATED.version,
+    payload,
+  };
+}
+
+

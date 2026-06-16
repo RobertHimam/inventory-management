@@ -18,6 +18,7 @@ const required = [
   'RABBITMQ_URL',
   'RABBITMQ_EXCHANGE',
   'RABBITMQ_DLQ_SUFFIX',
+  'JWT_SECRET',
 ];
 
 const missing = required.filter((key) => !process.env[key]);
@@ -33,4 +34,5 @@ export const config = {
   rabbitmqUrl: process.env.RABBITMQ_URL!,
   rabbitmqExchange: process.env.RABBITMQ_EXCHANGE!,
   rabbitmqDlqSuffix: process.env.RABBITMQ_DLQ_SUFFIX!,
+  jwtSecret: process.env.JWT_SECRET!,
 };

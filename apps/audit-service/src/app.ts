@@ -1,0 +1,44 @@
+import express, { Application } from 'express';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import swaggerJsdoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import { correlationMiddleware } from './middleware/correlation.middleware';
+import { errorMiddleware } from './middleware/error.middleware';
+import auditRoutes from './routes/audit.routes';
+import healthRoutes from './routes/health.routes';
+import { swaggerDefinition } from './swagger/docs';
+
+export const createApp = (): Application => {
+  const app = express();
+
+  // Middleware
+  app.use(cors());
+  app.use(cookieParser());
+  app.use(express.json());
+  app.use(correlationMiddleware);
+
+  // Swagger setup
+  const swaggerSpec = swaggerJsdoc({
+    definition: swaggerDefinition,
+    apis: ['./src/swagger/docs.ts', './src/routes/*.ts'],
+  });
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+  // Routes
+  app.use('/api/v1/audit', auditRoutes);
+  app.use('/api/v1', healthRoutes);
+
+  // Error handling
+  app.use(errorMiddleware);
+
+  // 404 handler
+  app.use('*', (_req, res) => {
+    res.status(404).json({
+      success: false,
+      error: 'Route not found',
+    });
+  });
+
+  return app;
+};
