@@ -1,17 +1,53 @@
 export interface Product {
-  id: string;
+  _id: string;
   name: string;
-  sku: string;
-  categoryId: string;
-  supplierId: string;
+  description?: string;
   price: number;
-  quantity: number;
-  reorderLevel: number;
-  createdAt: Date;
-  updatedAt: Date;
+  sku: string;
+  category: string;
+  stockQuantity: number;
+  isActive: boolean;
   deletedAt: Date | null;
   deletedBy: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
+
+export interface ProductListResponse {
+  success: boolean;
+  data: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface ProductDetailResponse {
+  success: boolean;
+  data: Product;
+}
+
+export interface ProductQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: string;
+  order?: 'asc' | 'desc';
+}
+
+export interface CreateProductDto {
+  name: string;
+  description?: string;
+  price: number;
+  sku: string;
+  category: string;
+  stockQuantity?: number;
+  isActive?: boolean;
+}
+
+export type UpdateProductDto = Partial<CreateProductDto>;
 
 export interface Category {
   id: string;
@@ -30,14 +66,4 @@ export interface Supplier {
   updatedAt: Date;
   deletedAt: Date | null;
   deletedBy: string | null;
-}
-
-export interface CreateProductDto {
-  name: string;
-  sku: string;
-  categoryId: string;
-  supplierId: string;
-  price: number;
-  quantity: number;
-  reorderLevel: number;
 }

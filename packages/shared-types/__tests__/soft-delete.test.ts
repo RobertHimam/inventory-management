@@ -20,14 +20,13 @@ describe('Soft Delete', () => {
   it('Product should include deletedAt and deletedBy', () => {
     const deletedAt = new Date();
     const product: Product = {
-      id: 'p1',
+      _id: 'p1',
       name: 'Deleted Product',
       sku: 'DEL-001',
-      categoryId: 'cat1',
-      supplierId: 's1',
+      category: 'Electronics',
       price: 10,
-      quantity: 0,
-      reorderLevel: 5,
+      stockQuantity: 0,
+      isActive: false,
       createdAt: new Date(),
       updatedAt: new Date(),
       deletedAt,

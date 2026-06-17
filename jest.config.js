@@ -2,13 +2,28 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  extensionsToTreatAsEsm: ['.ts'],
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', { useESM: true, tsconfig: 'tsconfig.base.json' }],
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        useESM: true,
+        tsconfig: 'tsconfig.jest.json',
+        diagnostics: { ignoreCodes: [1343, 2352, 2339] },
+      },
+    ],
   },
   roots: ['<rootDir>/packages', '<rootDir>/apps'],
-  testMatch: ['**/__tests__/**/*.test.ts', '**/__tests__/**/*.spec.ts'],
+  testMatch: [
+    '**/__tests__/**/*.test.ts',
+    '**/__tests__/**/*.spec.ts',
+    '**/__tests__/**/*.test.tsx',
+    '**/__tests__/**/*.spec.tsx',
+  ],
+  setupFilesAfterEnv: ['<rootDir>/apps/frontend/src/setupTests.ts'],
   moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+    '\\.(jpg|jpeg|png|gif|svg|ico|webp|avif)$': '<rootDir>/__mocks__/fileMock.js',
     '^@shared/([^/]+)(.*)$': '<rootDir>/packages/shared-$1/src$2',
     '^@types(?:/(.*))?$': '<rootDir>/packages/shared-types/src/$1',
     '^@events(?:/(.*))?$': '<rootDir>/packages/shared-events/src/$1',
@@ -29,8 +44,8 @@ module.exports = {
     '^@utils/([^/]+)(.*)$': '<rootDir>/packages/$1/src/utils$2',
   },
   collectCoverageFrom: [
-    'packages/**/src/**/*.ts',
-    'apps/**/src/**/*.ts',
+    'packages/**/src/**/*.{ts,tsx}',
+    'apps/**/src/**/*.{ts,tsx}',
     '!**/node_modules/**',
     '!**/dist/**',
     '!**/__tests__/**',

@@ -58,11 +58,9 @@ describe('shared-types', () => {
       const dto: CreateProductDto = {
         name: 'New Widget',
         sku: 'NW-001',
-        categoryId: 'cat1',
-        supplierId: 's1',
+        category: 'Electronics',
         price: 29.99,
-        quantity: 50,
-        reorderLevel: 5,
+        stockQuantity: 50,
       };
       expect(dto.sku).toBe('NW-001');
     });
@@ -71,14 +69,13 @@ describe('shared-types', () => {
   describe('Product type', () => {
     it('should accept valid product object', () => {
       const product: Product = {
-        id: 'p1',
+        _id: 'p1',
         name: 'Widget',
         sku: 'W-001',
-        categoryId: 'cat1',
-        supplierId: 's1',
+        category: 'Electronics',
         price: 19.99,
-        quantity: 100,
-        reorderLevel: 10,
+        stockQuantity: 100,
+        isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,

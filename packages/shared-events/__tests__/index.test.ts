@@ -56,14 +56,13 @@ describe('shared-events', () => {
     it('should accept ProductCreatedPayload', () => {
       const payload: ProductCreatedPayload = {
         product: {
-          id: 'p1',
+          _id: 'p1',
           name: 'Widget',
           sku: 'W-001',
-          categoryId: 'cat1',
-          supplierId: 'sup1',
+          category: 'Electronics',
           price: 19.99,
-          quantity: 100,
-          reorderLevel: 10,
+          stockQuantity: 100,
+          isActive: true,
           createdAt: new Date(),
           updatedAt: new Date(),
           deletedAt: null,
@@ -75,14 +74,13 @@ describe('shared-events', () => {
 
     it('should accept ProductUpdatedPayload', () => {
       const product: Product = {
-        id: 'p1',
+        _id: 'p1',
         name: 'Widget',
         sku: 'W-001',
-        categoryId: 'cat1',
-        supplierId: 'sup1',
+        category: 'Electronics',
         price: 19.99,
-        quantity: 100,
-        reorderLevel: 10,
+        stockQuantity: 100,
+        isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,

@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "rootDir": ".",
+    "paths": {
+      "@types/*": ["packages/shared-types/src/*"],
+      "@events/*": ["packages/shared-events/src/*"],
+      "@auth/*": ["packages/shared-auth/src/*"],
+      "@rabbitmq/*": ["packages/shared-rabbitmq/src/*"],
+      "@logger/*": ["packages/shared-logger/src/*"],
+      "@inventory/shared-types": ["packages/shared-types/src"],
+      "@inventory/shared-types/*": ["packages/shared-types/src/*"],
+      "@inventory/shared-events": ["packages/shared-events/src"],
+      "@inventory/shared-events/*": ["packages/shared-events/src/*"],
+      "@inventory/shared-auth": ["packages/shared-auth/src"],
+      "@inventory/shared-auth/*": ["packages/shared-auth/src/*"],
+      "@inventory/shared-rabbitmq": ["packages/shared-rabbitmq/src"],
+      "@inventory/shared-rabbitmq/*": ["packages/shared-rabbitmq/src/*"],
+      "@inventory/shared-logger": ["packages/shared-logger/src"],
+      "@inventory/shared-logger/*": ["packages/shared-logger/src/*"]
+    }
+  }
+}

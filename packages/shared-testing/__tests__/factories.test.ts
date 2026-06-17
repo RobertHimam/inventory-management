@@ -22,12 +22,12 @@ describe('Factory Functions', () => {
     it('should create product with default values', () => {
       const product = createProduct();
       expect(product).toBeDefined();
-      expect(product.id).toBeDefined();
+      expect(product._id).toBeDefined();
       expect(product.name).toBe('Unnamed Product');
       expect(product.sku).toBe('UNNAMED');
       expect(product.price).toBe(0);
-      expect(product.quantity).toBe(0);
-      expect(product.reorderLevel).toBe(0);
+      expect(product.stockQuantity).toBe(0);
+      expect(product.isActive).toBe(true);
       expect(product.createdAt).toBeInstanceOf(Date);
       expect(product.updatedAt).toBeInstanceOf(Date);
     });
@@ -36,19 +36,19 @@ describe('Factory Functions', () => {
       const product = createProduct({
         name: 'Custom Product',
         price: 99.99,
-        quantity: 50,
-        id: 'custom-id',
+        stockQuantity: 50,
+        _id: 'custom-id',
       });
       expect(product.name).toBe('Custom Product');
       expect(product.price).toBe(99.99);
-      expect(product.quantity).toBe(50);
-      expect(product.id).toBe('custom-id');
+      expect(product.stockQuantity).toBe(50);
+      expect(product._id).toBe('custom-id');
     });
 
     it('should generate unique ids for each call', () => {
       const p1 = createProduct();
       const p2 = createProduct();
-      expect(p1.id).not.toBe(p2.id);
+      expect(p1._id).not.toBe(p2._id);
     });
   });
 
@@ -182,14 +182,13 @@ describe('Factory Functions', () => {
   describe('Fixtures', () => {
     it('productFixture should have valid structure', () => {
       expect(productFixture).toMatchObject({
-        id: 'prod-1',
+        _id: 'prod-1',
         name: 'Widget',
         sku: 'WGT-001',
-        categoryId: 'cat-1',
-        supplierId: 'sup-1',
+        category: 'General',
         price: 9.99,
-        quantity: 100,
-        reorderLevel: 10,
+        stockQuantity: 100,
+        isActive: true,
       });
       expect(productFixture.createdAt).toBeInstanceOf(Date);
       expect(productFixture.updatedAt).toBeInstanceOf(Date);
@@ -229,7 +228,7 @@ describe('Factory Functions', () => {
   describe('MockRepository', () => {
     it('should save and retrieve entities', () => {
       const repo = new MockRepository<Product>();
-      const product = createProduct({ id: 'test-1', name: 'Test Product' });
+      const product = createProduct({ _id: 'test-1', name: 'Test Product' });
       repo.save(product);
       expect(repo.get('test-1')).toEqual(product);
     });
@@ -264,9 +263,9 @@ describe('Factory Functions', () => {
 
     it('should allow updating entities via save with same id', () => {
       const repo = new MockRepository<Product>();
-      const p1 = createProduct({ id: 'p1', name: 'Original' });
+      const p1 = createProduct({ _id: 'p1', name: 'Original' });
       repo.save(p1);
-      const p2 = createProduct({ id: 'p1', name: 'Updated' });
+      const p2 = createProduct({ _id: 'p1', name: 'Updated' });
       repo.save(p2);
       const retrieved = repo.get('p1');
       expect(retrieved?.name).toBe('Updated');
@@ -277,8 +276,7 @@ describe('Factory Functions', () => {
 
 describe('Type Safety', () => {
   it('createProduct returns proper Product type', () => {
-    const product = createProduct({ name: 'Test', price: 10 });
-    // Should be compatible with Product interface from shared-types
+    const product = createProduct({ name: 'Test', price: 10, category: 'Test' });
     const productFromSharedTypes: Product = product;
     expect(productFromSharedTypes).toBeDefined();
   });

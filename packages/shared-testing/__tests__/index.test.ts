@@ -15,11 +15,10 @@ import { Product, Category, Supplier } from '@inventory/shared-types';
 describe('Fixtures', () => {
   it('productFixture has expected fields', () => {
     expect(productFixture).toMatchObject({
-      id: 'prod-1',
+      _id: 'prod-1',
       name: 'Widget',
       price: 9.99,
-      categoryId: 'cat-1',
-      supplierId: 'sup-1',
+      category: 'General',
     });
   });
   it('categoryFixture has expected fields', () => {
@@ -48,7 +47,7 @@ describe('Factories', () => {
   it('createProduct generates unique ids', () => {
     const p1 = createProduct();
     const p2 = createProduct();
-    expect(p1.id).not.toBe(p2.id);
+    expect(p1._id).not.toBe(p2._id);
   });
   it('createProduct applies overrides', () => {
     const p = createProduct({ name: 'Custom', price: 123 });
@@ -74,7 +73,7 @@ describe('Factories', () => {
 describe('MockRepository', () => {
   it('save and get', () => {
     const repo = new MockRepository<Product>();
-    const p = createProduct({ id: 'p1' });
+    const p = createProduct({ _id: 'p1' });
     repo.save(p);
     expect(repo.get('p1')).toEqual(p);
   });

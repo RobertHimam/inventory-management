@@ -14,14 +14,13 @@ import {
 
 // Fixtures - static test data
 export const productFixture: Product = {
-  id: 'prod-1',
+  _id: 'prod-1',
   name: 'Widget',
   sku: 'WGT-001',
-  categoryId: 'cat-1',
-  supplierId: 'sup-1',
+  category: 'General',
   price: 9.99,
-  quantity: 100,
-  reorderLevel: 10,
+  stockQuantity: 100,
+  isActive: true,
   createdAt: new Date(),
   updatedAt: new Date(),
   deletedAt: null,
@@ -81,14 +80,13 @@ const createBaseEntity = <
 
 export function createProduct(overrides?: Partial<CreateProductDto> & Partial<Product>): Product {
   const base: Product = {
-    id: nanoid(),
+    _id: nanoid(),
     name: 'Unnamed Product',
     sku: 'UNNAMED',
-    categoryId: '',
-    supplierId: '',
+    category: '',
     price: 0,
-    quantity: 0,
-    reorderLevel: 0,
+    stockQuantity: 0,
+    isActive: true,
     createdAt: new Date(),
     updatedAt: new Date(),
     deletedAt: null,
@@ -210,8 +208,12 @@ export function createStockAdjustment(data: {
 }
 
 // Mock Repository - in-memory data store for testing
-export class MockRepository<T extends { id: string }> {
+export class MockRepository<T extends { id?: string; _id?: string }> {
   private items: Map<string, T> = new Map();
+
+  private key(entity: T): string {
+    return (entity as any)._id ?? (entity as any).id ?? '';
+  }
 
   clear(): void {
     this.items.clear();
@@ -226,7 +228,7 @@ export class MockRepository<T extends { id: string }> {
   }
 
   save(entity: T): T {
-    this.items.set(entity.id, entity);
+    this.items.set(this.key(entity), entity);
     return entity;
   }
 
