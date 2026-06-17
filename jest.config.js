@@ -65,6 +65,7 @@ module.exports = {
   restoreMocks: true,
   resetMocks: true,
   detectOpenHandles: true,
+  maxWorkers: 2,
   testTimeout: 10000,
   errorOnDeprecated: true,
 };

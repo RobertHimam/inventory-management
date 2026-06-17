@@ -9,6 +9,9 @@ import { ProductsPage } from './pages/ProductsPage'
 import { ProductCreatePage } from './pages/ProductCreatePage'
 import { ProductEditPage } from './pages/ProductEditPage'
 import { InventoryPage } from './pages/InventoryPage'
+import { StockInPage } from './pages/StockInPage'
+import { StockOutPage } from './pages/StockOutPage'
+import { StockAdjustmentPage } from './pages/StockAdjustmentPage'
 import { ReportsPage } from './pages/ReportsPage'
 import { NotificationsPage } from './pages/NotificationsPage'
 import { CategoriesPage } from './pages/CategoriesPage'
@@ -50,6 +53,30 @@ export default function App() {
           }
         />
         <Route path="/inventory" element={<InventoryPage />} />
+        <Route
+          path="/inventory/stock-in"
+          element={
+            <RoleGuard allowedRoles={ADMIN_ONLY}>
+              <StockInPage />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="/inventory/stock-out"
+          element={
+            <RoleGuard allowedRoles={ADMIN_ONLY}>
+              <StockOutPage />
+            </RoleGuard>
+          }
+        />
+        <Route
+          path="/inventory/adjustment"
+          element={
+            <RoleGuard allowedRoles={ADMIN_ONLY}>
+              <StockAdjustmentPage />
+            </RoleGuard>
+          }
+        />
         <Route path="/reports" element={<ReportsPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
 
