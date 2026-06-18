@@ -72,18 +72,18 @@ export function ProductEditPage() {
     updateProduct({ id, dto }, { onSuccess: () => navigate('/products') })
   }
 
-  if (isLoading) return <p className="p-6 text-gray-500">Loading...</p>
+  if (isLoading) return <p className="p-4 sm:p-6 text-gray-500">Loading...</p>
 
   if (isError) {
     return (
-      <p role="alert" className="p-6 text-red-600">
+      <p role="alert" className="p-4 sm:p-6 text-red-600">
         Failed to load product.
       </p>
     )
   }
 
   return (
-    <div className="p-6 max-w-2xl">
+    <div className="p-4 sm:p-6 max-w-2xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit Product</h1>
 
       {isUpdateError && (

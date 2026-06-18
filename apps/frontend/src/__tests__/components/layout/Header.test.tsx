@@ -31,7 +31,7 @@ describe('Header', () => {
   function renderHeader() {
     return render(
       <MemoryRouter>
-        <Header />
+        <Header onMenuToggle={jest.fn()} />
       </MemoryRouter>
     )
   }

@@ -16,7 +16,7 @@ const adminOnlyLinks = ['Categories', 'Suppliers', 'Users', 'Audit']
 function renderSidebar() {
   return render(
     <MemoryRouter>
-      <Sidebar />
+      <Sidebar isOpen={false} onClose={jest.fn()} />
     </MemoryRouter>
   )
 }

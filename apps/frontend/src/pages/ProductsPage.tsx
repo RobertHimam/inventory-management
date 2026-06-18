@@ -43,8 +43,8 @@ export function ProductsPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Products</h1>
         {isAdmin && (
           <button

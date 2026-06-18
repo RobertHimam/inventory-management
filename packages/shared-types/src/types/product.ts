@@ -49,21 +49,3 @@ export interface CreateProductDto {
 
 export type UpdateProductDto = Partial<CreateProductDto>;
 
-export interface Category {
-  id: string;
-  name: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
-  deletedBy: string | null;
-}
-
-export interface Supplier {
-  id: string;
-  name: string;
-  contactEmail: string;
-  createdAt: Date;
-  updatedAt: Date;
-  deletedAt: Date | null;
-  deletedBy: string | null;
-}

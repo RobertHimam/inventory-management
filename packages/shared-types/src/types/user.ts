@@ -18,3 +18,27 @@ export interface CreateUserDto {
   password: string;
   role: Role;
 }
+
+export interface UserQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort?: string;
+  order?: 'asc' | 'desc';
+}
+
+export interface UserListResponse {
+  success: boolean;
+  data: User[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface UserDetailResponse {
+  success: boolean;
+  data: User;
+}

@@ -14,6 +14,12 @@ services:
       - mongodb_data:/data/db
     networks:
       - inventory-network
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', 'db.adminCommand("ping")', '--quiet']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -29,39 +35,12 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
       - inventory-network
-
-  gateway:
-    build:
-      context: .
-      dockerfile: apps/gateway/Dockerfile
-    container_name: inventory-gateway
-    restart: unless-stopped
-    ports:
-      - '3000:3000'
-    environment:
-      NODE_ENV: development
-      PORT: 3000
-      AUTH_SERVICE_URL: http://auth-service:3000
-      PRODUCT_SERVICE_URL: http://product-service:3000
-      INVENTORY_SERVICE_URL: http://inventory-service:3000
-      REPORT_SERVICE_URL: http://report-service:3000
-      NOTIFICATION_SERVICE_URL: http://notification-service:3000
-      AUDIT_SERVICE_URL: http://audit-service:3000
-      SSE_SERVICE_URL: http://sse-service:3000
-      RABBITMQ_URL: amqp://rabbitmq:5672
-      MONGODB_URI: mongodb://admin:admin123@mongodb:27017
-    depends_on:
-      - mongodb
-      - rabbitmq
-      - auth-service
-      - product-service
-      - inventory-service
-      - report-service
-      - notification-service
-      - audit-service
-      - sse-service
-    networks:
-      - inventory-network
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', '-q', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   auth-service:
     build:
@@ -70,16 +49,18 @@ services:
     container_name: inventory-auth-service
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/auth
-      RABBITMQ_URL: amqp://rabbitmq:5672
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/auth?authSource=admin
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars+}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
     depends_on:
-      - mongodb
-      - rabbitmq
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - inventory-network
 
@@ -90,14 +71,16 @@ services:
     container_name: inventory-product-service
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/products
-      RABBITMQ_URL: amqp://rabbitmq:5672
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/products?authSource=admin
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       RABBITMQ_EXCHANGE: inventory.events
     depends_on:
-      - mongodb
-      - rabbitmq
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - inventory-network
 
@@ -108,14 +91,16 @@ services:
     container_name: inventory-inventory-service
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/inventory
-      RABBITMQ_URL: amqp://rabbitmq:5672
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/inventory?authSource=admin
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       RABBITMQ_EXCHANGE: inventory.events
     depends_on:
-      - mongodb
-      - rabbitmq
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - inventory-network
 
@@ -126,13 +111,15 @@ services:
     container_name: inventory-report-service
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      MONGODB_URI: mongodb://admin:admin123@mongodb:/reports
-      RABBITMQ_URL: amqp://rabbitmq:5672
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/reports?authSource=admin
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
     depends_on:
-      - mongodb
-      - rabbitmq
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - inventory-network
 
@@ -143,12 +130,16 @@ services:
     container_name: inventory-notification-service
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      RABBITMQ_URL: amqp://rabbitmq:5672
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/notifications?authSource=admin
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       RABBITMQ_EXCHANGE: inventory.events
     depends_on:
-      - rabbitmq
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - inventory-network
 
@@ -159,15 +150,17 @@ services:
     container_name: inventory-audit-service
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/audit
-      RABBITMQ_URL: amqp://rabbitmq:5672
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/audit?authSource=admin
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       RABBITMQ_EXCHANGE: inventory.events
       RABBITMQ_DLQ_SUFFIX: .dlq
     depends_on:
-      - mongodb
-      - rabbitmq
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - inventory-network
 
@@ -178,13 +171,57 @@ services:
     container_name: inventory-sse-service
     restart: unless-stopped
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
-      RABBITMQ_URL: amqp://rabbitmq:5672
-      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars+}
     depends_on:
-      - rabbitmq
-      - auth-service
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - inventory-network
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    container_name: inventory-gateway
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      AUTH_SERVICE_URL: http://auth-service:3000
+      PRODUCT_SERVICE_URL: http://product-service:3000
+      INVENTORY_SERVICE_URL: http://inventory-service:3000
+      REPORT_SERVICE_URL: http://report-service:3000
+      NOTIFICATION_SERVICE_URL: http://notification-service:3000
+      AUDIT_SERVICE_URL: http://audit-service:3000
+      SSE_SERVICE_URL: http://sse-service:3000
+      RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/gateway?authSource=admin
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      product-service:
+        condition: service_started
+      inventory-service:
+        condition: service_started
+      report-service:
+        condition: service_started
+      notification-service:
+        condition: service_started
+      audit-service:
+        condition: service_started
+      sse-service:
+        condition: service_started
     networks:
       - inventory-network
 
@@ -192,13 +229,14 @@ services:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
+      args:
+        # VITE_API_URL is embedded at BUILD time by vite define()
+        # Points to the gateway port exposed on the host
+        VITE_API_URL: http://localhost:3000
     container_name: inventory-frontend
     restart: unless-stopped
     ports:
-      - '3001:3000'
-    environment:
-      NODE_ENV: development
-      VITE_API_URL: http://localhost:3000
+      - '3001:80'
     depends_on:
       - gateway
     networks:

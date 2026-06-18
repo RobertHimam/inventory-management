@@ -9,5 +9,31 @@ export interface AuditLog {
   action: AuditAction;
   resourceType: string;
   resourceId: string;
-  createdAt: Date;
+  createdAt: string;
+}
+
+export interface AuditQueryParams {
+  page?: number;
+  limit?: number;
+  userId?: string;
+  username?: string;
+  role?: string;
+  action?: string;
+  resourceType?: string;
+  startDate?: string;
+  endDate?: string;
+  search?: string;
+  sort?: string;
+  order?: 'asc' | 'desc';
+}
+
+export interface AuditListResponse {
+  success: boolean;
+  data: AuditLog[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
 }

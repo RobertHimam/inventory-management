@@ -4,4 +4,8 @@ export * from './types/inventory';
 export * from './types/user';
 export * from './types/audit';
 export * from './types/api';
+export * from './types/category';
+export * from './types/supplier';
+export * from './types/notification';
+export * from './types/report';
 export * from './enums';

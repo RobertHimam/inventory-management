@@ -20,6 +20,8 @@ module.exports = {
       path.resolve(root, 'packages/shared-logger/tsconfig.json'),
       path.resolve(root, 'packages/shared-rabbitmq/tsconfig.json'),
       path.resolve(root, 'packages/shared-testing/tsconfig.json'),
+      path.resolve(root, 'apps/frontend/tsconfig.json'),
+      path.resolve(root, 'tsconfig.jest.json'),
     ],
   },
   plugins: ['@typescript-eslint'],
