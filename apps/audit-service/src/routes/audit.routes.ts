@@ -22,7 +22,7 @@ const auditRepository = new AuditRepository();
 const auditService = new AuditService(auditRepository, logger);
 const auditController = new AuditController(auditService);
 
-eventBus.subscribe('audit.logged', async (payload: any, headers: Record<string, unknown>, correlationId?: string) => {
+eventBus.subscribe('audit.logged', async (payload: unknown, headers: Record<string, unknown>, correlationId?: string) => {
   try {
     await auditService.handleAuditEvent(payload, headers, correlationId);
   } catch (err) {

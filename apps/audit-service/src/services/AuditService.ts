@@ -18,23 +18,24 @@ export class AuditService {
     return await this.repository.findAll(options);
   }
 
-  async handleAuditEvent(payload: any, headers?: any, correlationId?: string): Promise<void> {
+  async handleAuditEvent(payload: unknown, headers?: Record<string, unknown>, correlationId?: string): Promise<void> {
     try {
       this.logger.info('Handling audit event from event bus', { correlationId, payload });
 
-      const cid = correlationId || payload.correlationId || (headers && headers['X-Correlation-ID']);
+      const p = payload as Record<string, unknown>;
+      const cid = correlationId || p.correlationId || (headers && headers['X-Correlation-ID']);
 
       const auditData: Partial<IAuditLog> = {
-        correlationId: cid,
-        userId: payload.userId,
-        username: payload.username,
-        role: payload.role,
-        action: payload.action,
-        resourceType: payload.resourceType,
-        resourceId: payload.resourceId,
-        before: payload.before,
-        after: payload.after,
-        metadata: payload.metadata,
+        correlationId: cid as string,
+        userId: p.userId as string,
+        username: p.username as string,
+        role: p.role as IAuditLog['role'],
+        action: p.action as IAuditLog['action'],
+        resourceType: p.resourceType as string,
+        resourceId: p.resourceId as string,
+        before: p.before as Record<string, unknown> | null,
+        after: p.after as Record<string, unknown> | null,
+        metadata: p.metadata as Record<string, unknown> | null,
       };
 
       if (

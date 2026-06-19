@@ -3,14 +3,16 @@ import { StockInService } from '../services/StockInService';
 import { StockInDto } from '../validation/inventory.validation';
 import { ValidationError, ConflictError, NotFoundError } from '../errors';
 
+type AuthReq = import('express').Request & { user?: { userId: string; role: string }; correlationId?: string };
+
 export class StockInController {
   constructor(private readonly stockInService: StockInService) {}
 
-  async stockIn(req: Request<{}, {}, StockInDto>, res: Response): Promise<void> {
+  async stockIn(req: Request<Record<string, never>, unknown, StockInDto>, res: Response): Promise<void> {
     try {
       const stockInData = req.body;
-      const user = (req as any).user || 'system';
-      const correlationId = (req as any).correlationId;
+      const user = (req as AuthReq).user || 'system';
+      const correlationId = (req as AuthReq).correlationId;
 
       const transaction = await this.stockInService.stockIn(
         stockInData,

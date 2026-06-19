@@ -43,7 +43,7 @@ export class InventoryRepository implements IInventoryRepository {
       order = 'desc',
     } = options;
 
-    const query: any = { deletedAt: null };
+    const query: Record<string, unknown> = { deletedAt: null };
 
     if (search) {
       query.$or = [
@@ -54,7 +54,7 @@ export class InventoryRepository implements IInventoryRepository {
     }
 
     const sortOrder = order === 'asc' ? 1 : -1;
-    const sortOptions = { [sort]: sortOrder } as any;
+    const sortOptions: Record<string, number> = { [sort]: sortOrder };
 
     const skip = (page - 1) * limit;
 

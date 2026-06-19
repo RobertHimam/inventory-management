@@ -3,14 +3,16 @@ import { StockOutService } from '../services/StockOutService';
 import { StockOutDto } from '../validation/inventory.validation';
 import { ValidationError, ConflictError, NotFoundError } from '../errors';
 
+type AuthReq = import('express').Request & { user?: { userId: string; role: string }; correlationId?: string };
+
 export class StockOutController {
   constructor(private readonly stockOutService: StockOutService) {}
 
-  async stockOut(req: Request<{}, {}, StockOutDto>, res: Response): Promise<void> {
+  async stockOut(req: Request<Record<string, never>, unknown, StockOutDto>, res: Response): Promise<void> {
     try {
       const stockOutData = req.body;
-      const user = (req as any).user || 'system';
-      const correlationId = (req as any).correlationId;
+      const user = (req as AuthReq).user || 'system';
+      const correlationId = (req as AuthReq).correlationId;
 
       const transaction = await this.stockOutService.stockOut(
         stockOutData,

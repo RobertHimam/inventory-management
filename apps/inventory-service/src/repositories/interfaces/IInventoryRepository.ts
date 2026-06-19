@@ -9,7 +9,7 @@ export interface FindAllInventoryOptions {
 }
 
 export interface FindAllInventoryResult {
-  data: any[];
+  data: unknown[];
   total: number;
 }
 

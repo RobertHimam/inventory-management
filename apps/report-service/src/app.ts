@@ -66,7 +66,7 @@ export function createApp(reportService: ReportService, jwtSecret: string): Appl
   // GET /reports/dashboard (USER and above)
   app.get('/api/v1/reports/dashboard', auth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = (req as any).user;
+      const user = (req as import('express').Request & { user?: { role: string } }).user;
       const cacheKey = `dashboard:${user?.role || 'USER'}`;
       
       const cached = await reportService.getCachedReport(cacheKey);
@@ -87,7 +87,7 @@ export function createApp(reportService: ReportService, jwtSecret: string): Appl
   // GET /reports/sales (ADMIN only)
   app.get('/api/v1/reports/sales', auth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = (req as any).user;
+      const user = (req as import('express').Request & { user?: { role: string } }).user;
       if (user?.role !== Role.ADMIN) {
         res.status(403).json({ success: false, error: 'Forbidden' });
         return;
@@ -125,7 +125,7 @@ export function createApp(reportService: ReportService, jwtSecret: string): Appl
   // GET /reports/inventory-valuation (ADMIN only)
   app.get('/api/v1/reports/inventory-valuation', auth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = (req as any).user;
+      const user = (req as import('express').Request & { user?: { role: string } }).user;
       if (user?.role !== Role.ADMIN) {
         res.status(403).json({ success: false, error: 'Forbidden' });
         return;
@@ -167,8 +167,9 @@ export function createApp(reportService: ReportService, jwtSecret: string): Appl
   });
 
   // Error middleware
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    console.error('Report Service Error:', err);
+  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+    // eslint-disable-next-line no-console
+    console.error('Report Service Error:', err.message);
     res.status(500).json({
       success: false,
       error: 'Internal Server Error',

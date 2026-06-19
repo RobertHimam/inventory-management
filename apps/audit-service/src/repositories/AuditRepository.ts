@@ -23,7 +23,7 @@ export class AuditRepository implements IAuditRepository {
       order = 'desc',
     } = options;
 
-    const query: any = {};
+    const query: Record<string, unknown> = {};
 
     if (userId) {
       query.userId = userId;
@@ -62,7 +62,7 @@ export class AuditRepository implements IAuditRepository {
     }
 
     const sortOrder = order === 'asc' ? 1 : -1;
-    const sortOptions = { [sort]: sortOrder } as any;
+    const sortOptions = { [sort]: sortOrder } as Record<string, 1 | -1>;
 
     const skip = (page - 1) * limit;
 

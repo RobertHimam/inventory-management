@@ -22,7 +22,7 @@ export class InventoryController {
     }
   }
 
-  async listItems(req: Request<{}, {}, {}, any>, res: Response): Promise<void> {
+  async listItems(req: Request<Record<string, never>, unknown, unknown, Record<string, string>>, res: Response): Promise<void> {
     try {
       const query = req.query;
       const result = await this.inventoryService.listItems(query);

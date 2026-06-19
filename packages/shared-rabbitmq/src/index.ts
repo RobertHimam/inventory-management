@@ -92,6 +92,7 @@ export class EventBus {
         handler(payload, headers, correlationId);
         channel.ack(msg);
       } catch (err) {
+        // eslint-disable-next-line no-console
         console.error('Malformed JSON in message', {
           queue,
           error: err,

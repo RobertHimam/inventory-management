@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import request from 'supertest';
 import { MongoMemoryServer } from 'mongodb-memory-server';

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 import { AuditService } from '../../../services/AuditService';
 import { IAuditRepository } from '../../../repositories/interfaces/IAuditRepository';
 import { Role, AuditAction } from '@inventory/shared-types';

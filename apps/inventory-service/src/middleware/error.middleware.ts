@@ -6,7 +6,8 @@ export const errorMiddleware = (
   res: Response,
   _next: NextFunction
 ): void => {
-  console.error(`[${(req as any).correlationId || 'no-correlation'}] ${err.message}`, {
+  // eslint-disable-next-line no-console
+  console.error(`[${(req as Request & { correlationId?: string }).correlationId || 'no-correlation'}] ${err.message}`, {
     stack: err.stack,
   });
 

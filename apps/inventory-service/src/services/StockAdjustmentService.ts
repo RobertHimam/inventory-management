@@ -14,7 +14,7 @@ export class StockAdjustmentService {
     private readonly logger: Logger = createLogger()
   ) {}
 
-  async adjustStock(dto: StockAdjustmentDto, user: any, correlationId?: string): Promise<any> {
+  async adjustStock(dto: StockAdjustmentDto, user: { userId: string; username: string; role: string } | string, correlationId?: string): Promise<unknown> {
     // 1. Validate payload
     const validationResult = stockAdjustmentSchema.safeParse(dto);
     if (!validationResult.success) {
@@ -90,7 +90,7 @@ export class StockAdjustmentService {
             resourceType: 'StockAdjustment',
             resourceId: transaction.id,
             before: { quantity: previousQuantity },
-            after: (transaction as any).toObject ? (transaction as any).toObject() : transaction,
+            after: (transaction as { toObject?: () => Record<string, unknown> }).toObject ? (transaction as { toObject?: () => Record<string, unknown> }).toObject()! : transaction,
             metadata: { productId, quantity, reason },
           });
           try {

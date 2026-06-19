@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IReportCache extends Document {
   key: string;
-  data: any;
+  data: unknown;
   createdAt: Date;
 }
 

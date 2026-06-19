@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 import { Request, Response, NextFunction } from 'express';
 import { idempotency } from '../../../middleware/idempotency.middleware';

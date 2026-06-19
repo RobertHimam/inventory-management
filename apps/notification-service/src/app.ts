@@ -46,7 +46,7 @@ export function createApp(notificationService: NotificationService, jwtSecret: s
   // GET /notifications
   app.get('/api/v1/notifications', auth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = (req as any).user;
+      const user = (req as Request & { user?: { userId: string } }).user;
       if (!user) {
         res.status(401).json({ success: false, error: 'Not authenticated' });
         return;
@@ -62,7 +62,7 @@ export function createApp(notificationService: NotificationService, jwtSecret: s
   // PATCH /notifications/:id/read
   app.patch('/api/v1/notifications/:id/read', auth, async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const user = (req as any).user;
+      const user = (req as Request & { user?: { userId: string } }).user;
       if (!user) {
         res.status(401).json({ success: false, error: 'Not authenticated' });
         return;
@@ -84,7 +84,8 @@ export function createApp(notificationService: NotificationService, jwtSecret: s
   });
 
   // Error handler
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    // eslint-disable-next-line no-console
     console.error('Notification Service Error:', err);
     res.status(500).json({
       success: false,

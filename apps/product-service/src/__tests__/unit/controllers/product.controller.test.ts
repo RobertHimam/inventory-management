@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 import { ProductController } from '../../../controllers/ProductController';
 import { ProductService } from '../../../services/ProductService';
 import { Request, Response } from 'express';

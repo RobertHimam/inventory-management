@@ -48,7 +48,7 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
     // Successfully acquired lock (key was not present)
     // Override res.json to capture response
     const originalJson = res.json;
-    res.json = function (body: any): Response {
+    res.json = function (body: unknown): Response {
       const statusCode = res.statusCode;
 
       if (statusCode < 500) {
@@ -61,11 +61,13 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
             responseBody: body,
           }
         ).catch((err) => {
+          // eslint-disable-next-line no-console
           console.error('Failed to update idempotency key:', err);
         });
       } else {
         // Delete key on 5xx errors so client can retry
         IdempotencyKey.deleteOne({ key: keyStr }).catch((err) => {
+          // eslint-disable-next-line no-console
           console.error('Failed to delete failed idempotency key:', err);
         });
       }
@@ -74,9 +76,9 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
     };
 
     next();
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle duplicate key error (code 11000)
-    if (error.code === 11000) {
+    if ((error as { code?: number }).code === 11000) {
       try {
         const existingRecord = await IdempotencyKey.findOne({ key: keyStr });
         if (!existingRecord) {

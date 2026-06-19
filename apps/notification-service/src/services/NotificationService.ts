@@ -1,8 +1,9 @@
 import { NotificationModel, INotification } from '../models/notification.model';
 import { TemplateModel } from '../models/template.model';
+import { Logger } from '@inventory/shared-logger';
 
 export interface IEmailClient {
-  send(to: string, subject: string, body: string): Promise<any>;
+  send(to: string, subject: string, body: string): Promise<unknown>;
 }
 
 export class NotificationService {
@@ -10,11 +11,11 @@ export class NotificationService {
 
   constructor(
     private readonly emailClient: IEmailClient,
-    private readonly logger: any
+    private readonly logger: Logger
   ) {}
 
   // TEMPLATING UTILITY
-  private render(templateStr: string, variables: Record<string, any>): string {
+  private render(templateStr: string, variables: Record<string, unknown>): string {
     let result = templateStr;
     for (const [key, value] of Object.entries(variables)) {
       result = result.replace(new RegExp(`{{${key}}}`, 'g'), String(value));
@@ -28,7 +29,7 @@ export class NotificationService {
     type: string,
     recipient: string,
     templateKey: string,
-    variables: Record<string, any>
+    variables: Record<string, unknown>
   ): Promise<INotification> {
     const template = await TemplateModel.findOne({ key: templateKey });
     if (!template) {
@@ -80,14 +81,14 @@ export class NotificationService {
   }
 
   // EVENT HANDLERS
-  async handleUserCreated(payload: any): Promise<void> {
-    const { userId, username, email } = payload;
+  async handleUserCreated(payload: unknown): Promise<void> {
+    const { userId, username, email } = payload as { userId: string; username: string; email: string };
     this.logger.info('Processing user.created notification event', { userId });
     await this.sendNotificationWithRetry(userId, 'WELCOME', email, 'welcome', { username });
   }
 
-  async handleStockLowDetected(payload: any): Promise<void> {
-    const { productId, currentQuantity } = payload;
+  async handleStockLowDetected(payload: unknown): Promise<void> {
+    const { productId, currentQuantity } = payload as { productId: string; currentQuantity: number };
     this.logger.info('Processing stock.low.detected notification event', { productId });
     // Sends email to admin recipient
     await this.sendNotificationWithRetry(
@@ -99,8 +100,8 @@ export class NotificationService {
     );
   }
 
-  async handleStockIn(payload: any): Promise<void> {
-    const { productId, quantity, userId, userEmail } = payload;
+  async handleStockIn(payload: unknown): Promise<void> {
+    const { productId, quantity, userId, userEmail } = payload as { productId: string; quantity: number; userId: string; userEmail?: string };
     this.logger.info('Processing stock.in.created notification event', { productId, userId });
     if (userEmail) {
       await this.sendNotificationWithRetry(
@@ -113,8 +114,8 @@ export class NotificationService {
     }
   }
 
-  async handleStockOut(payload: any): Promise<void> {
-    const { productId, quantity, userId, userEmail } = payload;
+  async handleStockOut(payload: unknown): Promise<void> {
+    const { productId, quantity, userId, userEmail } = payload as { productId: string; quantity: number; userId: string; userEmail?: string };
     this.logger.info('Processing stock.out.created notification event', { productId, userId });
     if (userEmail) {
       await this.sendNotificationWithRetry(

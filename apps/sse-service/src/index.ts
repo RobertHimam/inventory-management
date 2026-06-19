@@ -41,9 +41,9 @@ async function start() {
     ];
 
     for (const event of eventsToSubscribe) {
-      eventBus.subscribe(event, async (payload: any) => {
+      eventBus.subscribe(event, async (payload: unknown) => {
         logger.info(`Received RabbitMQ event: ${event}`, { payload });
-        const handled = sseService.handleRabbitMQEvent(event, payload);
+        const handled = sseService.handleRabbitMQEvent(event, payload as Record<string, unknown>);
         if (!handled) {
           logger.warn(`Failed to process or validate event: ${event}`);
         }
@@ -65,4 +65,4 @@ async function start() {
   }
 }
 
-start();
+void start();

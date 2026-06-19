@@ -57,9 +57,9 @@ export class SSEService {
     return (this.connections.get(userId) || []).length;
   }
 
-  broadcast(eventType: string, payload: any): void {
+  broadcast(eventType: string, payload: unknown): void {
     const message = `event: ${eventType}\ndata: ${JSON.stringify(payload)}\n\n`;
-    for (const [_, userConns] of this.connections.entries()) {
+    for (const [, userConns] of this.connections.entries()) {
       for (const res of userConns) {
         res.write(message);
       }
@@ -67,7 +67,7 @@ export class SSEService {
   }
 
   sendHeartbeat(): void {
-    for (const [_, userConns] of this.connections.entries()) {
+    for (const [, userConns] of this.connections.entries()) {
       for (const res of userConns) {
         res.write(': heartbeat\n\n');
       }
@@ -88,7 +88,7 @@ export class SSEService {
     }
   }
 
-  handleRabbitMQEvent(eventType: string, payload: any): boolean {
+  handleRabbitMQEvent(eventType: string, payload: Record<string, unknown>): boolean {
     try {
       let sseEvent = eventType;
       let validatedPayload = payload;

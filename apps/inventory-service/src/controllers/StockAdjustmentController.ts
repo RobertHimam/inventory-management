@@ -3,14 +3,16 @@ import { StockAdjustmentService } from '../services/StockAdjustmentService';
 import { StockAdjustmentDto } from '../validation/inventory.validation';
 import { ValidationError, ConflictError, NotFoundError } from '../errors';
 
+type AuthReq = import('express').Request & { user?: { userId: string; role: string }; correlationId?: string };
+
 export class StockAdjustmentController {
   constructor(private readonly stockAdjustmentService: StockAdjustmentService) {}
 
-  async adjustStock(req: Request<{}, {}, StockAdjustmentDto>, res: Response): Promise<void> {
+  async adjustStock(req: Request<Record<string, never>, unknown, StockAdjustmentDto>, res: Response): Promise<void> {
     try {
       const adjustData = req.body;
-      const user = (req as any).user || 'system';
-      const correlationId = (req as any).correlationId;
+      const user = (req as AuthReq).user || 'system';
+      const correlationId = (req as AuthReq).correlationId;
 
       const transaction = await this.stockAdjustmentService.adjustStock(
         adjustData,

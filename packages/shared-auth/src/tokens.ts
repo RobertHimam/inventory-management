@@ -16,8 +16,8 @@ export function createAccessToken(payload: TokenPayload, secret: string, ttlSeco
 
 export function verifyAccessToken(token: string, secret: string): TokenPayload | null {
   try {
-    const decoded = verify(token, secret) as any;
-    return { sub: decoded.sub, role: decoded.role, username: decoded.username };
+    const decoded = verify(token, secret) as Record<string, unknown>;
+    return { sub: decoded.sub as string, role: decoded.role as Role, username: decoded.username as string | undefined };
   } catch (err) {
     return null;
   }
@@ -40,13 +40,13 @@ export function createRefreshToken(
 
 export function verifyRefreshToken(token: string, secret: string): RefreshTokenPayload | null {
   try {
-    const decoded = verify(token, secret) as any;
+    const decoded = verify(token, secret) as Record<string, unknown>;
     return {
-      sub: decoded.sub,
-      role: decoded.role,
-      jti: decoded.jti,
-      exp: decoded.exp,
-      username: decoded.username,
+      sub: decoded.sub as string,
+      role: decoded.role as Role,
+      jti: decoded.jti as string,
+      exp: decoded.exp as number | undefined,
+      username: decoded.username as string | undefined,
     };
   } catch (err) {
     return null;

@@ -5,7 +5,7 @@ import { ValidationError, NotFoundError } from '../errors';
 export class InventoryService {
   constructor(private readonly repository: IInventoryRepository) {}
 
-  async getItemByProductId(productId: string): Promise<any> {
+  async getItemByProductId(productId: string): Promise<unknown> {
     const item = await this.repository.findItemByProductId(productId);
     if (!item) {
       throw new NotFoundError(`Inventory item not found for product: ${productId}`);
@@ -13,7 +13,7 @@ export class InventoryService {
     return item;
   }
 
-  async listItems(query: ListInventoryQueryDto): Promise<any> {
+  async listItems(query: ListInventoryQueryDto): Promise<Record<string, unknown>> {
     const validationResult = listInventoryQuerySchema.safeParse(query);
     if (!validationResult.success) {
       throw new ValidationError(

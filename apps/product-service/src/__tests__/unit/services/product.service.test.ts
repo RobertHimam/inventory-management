@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 import { ProductService } from '../../../services/ProductService';
 import { IProductRepository } from '../../../repositories/interfaces/IProductRepository';
 import { CreateProductDto, UpdateProductDto } from '../../../validation/product.validation';

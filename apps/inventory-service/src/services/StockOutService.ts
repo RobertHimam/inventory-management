@@ -14,7 +14,7 @@ export class StockOutService {
     private readonly logger: Logger = createLogger()
   ) {}
 
-  async stockOut(dto: StockOutDto, user: any, correlationId?: string): Promise<any> {
+  async stockOut(dto: StockOutDto, user: { userId: string; username: string; role: string } | string, correlationId?: string): Promise<unknown> {
     // 1. Validate payload
     const validationResult = stockOutSchema.safeParse(dto);
     if (!validationResult.success) {
@@ -81,7 +81,7 @@ export class StockOutService {
             resourceType: 'StockOut',
             resourceId: transaction.id,
             before: null,
-            after: (transaction as any).toObject ? (transaction as any).toObject() : transaction,
+            after: (transaction as { toObject?: () => Record<string, unknown> }).toObject ? (transaction as { toObject?: () => Record<string, unknown> }).toObject()! : transaction,
             metadata: { productId, quantity },
           });
           try {

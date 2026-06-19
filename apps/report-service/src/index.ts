@@ -44,7 +44,7 @@ async function start() {
     ];
 
     for (const sub of eventSubscriptions) {
-      eventBus.subscribe(sub.event, async (payload: any) => {
+      eventBus.subscribe(sub.event, async (payload: unknown) => {
         try {
           await sub.handler(payload);
         } catch (err) {
@@ -72,4 +72,4 @@ async function start() {
   }
 }
 
-start();
+void start();

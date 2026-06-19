@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 import { Application } from 'express';
 import { createServer, Server } from 'http';
 import http from 'http';

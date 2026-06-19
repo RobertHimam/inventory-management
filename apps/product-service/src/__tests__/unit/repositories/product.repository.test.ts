@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 import { ProductRepository } from '../../../repositories/ProductRepository';
 
 // Mock the product model module

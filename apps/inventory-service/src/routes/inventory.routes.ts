@@ -18,6 +18,7 @@ const router: Router = Router();
 // Initialize RabbitMQ connection and EventBus
 const rabbitConn = new RabbitMQConnection(config.rabbitmqUrl);
 rabbitConn.connect().catch((err) => {
+  // eslint-disable-next-line no-console
   console.error('Failed to connect to RabbitMQ:', err);
 });
 const eventBus = new EventBus(rabbitConn, config.rabbitmqExchange);

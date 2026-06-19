@@ -6,7 +6,7 @@ export interface IIdempotencyKey extends Document {
   requestHash: string;
   status: 'processing' | 'completed';
   responseCode?: number;
-  responseBody?: any;
+  responseBody?: unknown;
   createdAt: Date;
 }
 

@@ -79,6 +79,7 @@ function proxyTo(targetUrl: string) {
       });
 
       proxyReq.on('error', (err) => {
+        // eslint-disable-next-line no-console
         console.error(`Gateway proxy error routing to ${targetUrl}:`, err);
         res.status(502).json({
           success: false,

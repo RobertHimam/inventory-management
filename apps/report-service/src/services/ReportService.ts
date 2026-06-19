@@ -1,13 +1,14 @@
 import { ProductModel } from '../models/product.model';
 import { SaleModel } from '../models/sale.model';
 import { ReportCacheModel } from '../models/cache.model';
+import { Logger } from '@inventory/shared-logger';
 
 export class ReportService {
-  constructor(private readonly logger: any) {}
+  constructor(private readonly logger: Logger) {}
 
   // EVENT HANDLERS
-  async handleProductCreated(payload: any): Promise<void> {
-    const { product } = payload;
+  async handleProductCreated(payload: unknown): Promise<void> {
+    const { product } = payload as { product: { id: string; name: string; sku: string; price: number; cost: number; reorderLevel: number } };
     this.logger.info('Handling product.created in ReportService', { productId: product.id });
     await ProductModel.findOneAndUpdate(
       { productId: product.id },
@@ -24,8 +25,8 @@ export class ReportService {
     );
   }
 
-  async handleProductUpdated(payload: any): Promise<void> {
-    const { product } = payload;
+  async handleProductUpdated(payload: unknown): Promise<void> {
+    const { product } = payload as { product: { id: string; name: string; sku: string; price: number; cost: number; reorderLevel: number } };
     this.logger.info('Handling product.updated in ReportService', { productId: product.id });
     await ProductModel.findOneAndUpdate(
       { productId: product.id },
@@ -39,8 +40,8 @@ export class ReportService {
     );
   }
 
-  async handleProductDeleted(payload: any): Promise<void> {
-    const { productId } = payload;
+  async handleProductDeleted(payload: unknown): Promise<void> {
+    const { productId } = payload as { productId: string };
     this.logger.info('Handling product.deleted in ReportService', { productId });
     await ProductModel.findOneAndUpdate(
       { productId },
@@ -48,8 +49,8 @@ export class ReportService {
     );
   }
 
-  async handleStockIn(payload: any): Promise<void> {
-    const { productId, quantity } = payload;
+  async handleStockIn(payload: unknown): Promise<void> {
+    const { productId, quantity } = payload as { productId: string; quantity: number };
     this.logger.info('Handling stock.in.created in ReportService', { productId, quantity });
     await ProductModel.findOneAndUpdate(
       { productId },
@@ -59,8 +60,8 @@ export class ReportService {
     await this.invalidateCache('inventory-valuation');
   }
 
-  async handleStockOut(payload: any): Promise<void> {
-    const { productId, quantity, userId } = payload;
+  async handleStockOut(payload: unknown): Promise<void> {
+    const { productId, quantity, userId } = payload as { productId: string; quantity: number; userId: string; createdAt?: Date };
     this.logger.info('Handling stock.out.created in ReportService', { productId, quantity });
     
     // Find product to get price
@@ -88,8 +89,8 @@ export class ReportService {
     await this.invalidateCache('sales|dashboard');
   }
 
-  async handleStockAdjustment(payload: any): Promise<void> {
-    const { productId, newQuantity } = payload;
+  async handleStockAdjustment(payload: unknown): Promise<void> {
+    const { productId, newQuantity } = payload as { productId: string; newQuantity: number };
     this.logger.info('Handling stock.adjustment.created in ReportService', { productId, newQuantity });
     await ProductModel.findOneAndUpdate(
       { productId },
@@ -99,15 +100,15 @@ export class ReportService {
     await this.invalidateAllCaches();
   }
 
-  async handleStockLowDetected(payload: any): Promise<void> {
-    const { productId } = payload;
+  async handleStockLowDetected(payload: unknown): Promise<void> {
+    const { productId } = payload as { productId: string };
     this.logger.info('Handling stock.low.detected in ReportService', { productId });
     // Invalidate low stock cache
     await this.invalidateCache('low-stock');
   }
 
   // REPORT CALCULATIONS
-  async getDashboardMetrics(): Promise<any> {
+  async getDashboardMetrics(): Promise<Record<string, unknown>> {
     const products = await ProductModel.find({ deletedAt: null });
     
     let totalProducts = 0;
@@ -129,15 +130,16 @@ export class ReportService {
     };
   }
 
-  async getSalesReport(startDate?: string, endDate?: string): Promise<any> {
-    const filter: any = {};
+  async getSalesReport(startDate?: string, endDate?: string): Promise<Record<string, unknown>> {
+    const filter: Record<string, unknown> = {};
     if (startDate || endDate) {
-      filter.createdAt = {};
+      const dateFilter: Record<string, Date> = {};
+      filter.createdAt = dateFilter;
       if (startDate) {
-        filter.createdAt.$gte = new Date(startDate);
+        dateFilter.$gte = new Date(startDate);
       }
       if (endDate) {
-        filter.createdAt.$lte = new Date(endDate);
+        dateFilter.$lte = new Date(endDate);
       }
     }
 
@@ -158,7 +160,7 @@ export class ReportService {
     };
   }
 
-  async getInventoryValuation(): Promise<any> {
+  async getInventoryValuation(): Promise<Record<string, unknown>> {
     const products = await ProductModel.find({ deletedAt: null });
 
     const valuations = products.map((p) => ({
@@ -187,7 +189,7 @@ export class ReportService {
     };
   }
 
-  async getLowStockReport(): Promise<any> {
+  async getLowStockReport(): Promise<Record<string, unknown>> {
     const products = await ProductModel.find({ deletedAt: null });
     const lowStockItems = products.filter((p) => p.quantity <= p.reorderLevel);
     
@@ -197,12 +199,12 @@ export class ReportService {
   }
 
   // CACHING UTILITIES
-  async getCachedReport(key: string): Promise<any | null> {
+  async getCachedReport(key: string): Promise<unknown> {
     const cached = await ReportCacheModel.findOne({ key });
     return cached ? cached.data : null;
   }
 
-  async setCachedReport(key: string, data: any): Promise<void> {
+  async setCachedReport(key: string, data: unknown): Promise<void> {
     await ReportCacheModel.findOneAndUpdate(
       { key },
       { key, data, createdAt: new Date() },

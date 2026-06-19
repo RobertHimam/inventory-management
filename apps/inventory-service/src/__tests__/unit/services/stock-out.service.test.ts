@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment */
 import { StockOutService } from '../../../services/StockOutService';
 import { IInventoryRepository } from '../../../repositories/interfaces/IInventoryRepository';
 import { StockOutDto } from '../../../validation/inventory.validation';
