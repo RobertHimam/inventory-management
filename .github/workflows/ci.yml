@@ -1,0 +1,215 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '9.12.3'
+
+jobs:
+  # ─────────────────────────────────────────────
+  # Stage 1: Lint
+  # ─────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: ESLint
+        run: pnpm lint
+
+      - name: Prettier
+        run: pnpm format:check
+
+      - name: TypeScript type check
+        run: pnpm type-check
+
+  # ─────────────────────────────────────────────
+  # Stage 2 + 3 + 4: Tests + Coverage gate
+  # ─────────────────────────────────────────────
+  test:
+    name: Test & Coverage
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests with coverage
+        run: pnpm test:coverage
+        env:
+          NODE_ENV: test
+          CI: true
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
+
+  # ─────────────────────────────────────────────
+  # Stage 5: Build
+  # ─────────────────────────────────────────────
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages and services
+        run: pnpm build
+
+  # ─────────────────────────────────────────────
+  # Stage 6: Docker Build
+  # ─────────────────────────────────────────────
+  docker-build:
+    name: Docker Build (${{ matrix.service }})
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: true
+      matrix:
+        service:
+          - auth-service
+          - product-service
+          - inventory-service
+          - report-service
+          - notification-service
+          - audit-service
+          - sse-service
+          - gateway
+          - frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.service }} image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/${{ matrix.service }}/Dockerfile
+          push: false
+          tags: inventory-${{ matrix.service }}:ci
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,scope=${{ matrix.service }},mode=max
+          build-args: |
+            VITE_API_URL=http://localhost:3000
+
+  # ─────────────────────────────────────────────
+  # Stage 7: Docker Compose Smoke Test
+  # ─────────────────────────────────────────────
+  smoke-test:
+    name: Docker Compose Smoke Test
+    runs-on: ubuntu-latest
+    needs: docker-build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start stack
+        run: docker compose up -d --build
+        env:
+          JWT_SECRET: ci-test-secret-32chars-minimum-x
+
+      - name: Wait for services to be healthy
+        run: |
+          echo "Waiting for MongoDB and RabbitMQ..."
+          timeout 120 bash -c '
+            until docker compose ps | grep -E "(mongodb|rabbitmq)" | grep -q "healthy"; do
+              sleep 3
+            done
+          '
+          echo "Infrastructure healthy. Waiting for services..."
+          sleep 20
+
+      - name: Health check all services
+        run: |
+          # gateway is exposed to host on port 3000
+          echo -n "Checking gateway (localhost:3000/health)... "
+          if curl -sf --retry 5 --retry-delay 3 "http://localhost:3000/health" > /dev/null 2>&1; then
+            echo "OK"
+          else
+            echo "FAILED"
+            exit 1
+          fi
+
+          # internal services — reached via docker compose exec
+          internal_services=(
+            "inventory-auth-service"
+            "inventory-product-service"
+            "inventory-inventory-service"
+            "inventory-report-service"
+            "inventory-notification-service"
+            "inventory-audit-service"
+            "inventory-sse-service"
+          )
+          failed=0
+          for container in "${internal_services[@]}"; do
+            echo -n "Checking $container /health... "
+            if docker exec "$container" wget -qO- http://localhost:3000/health > /dev/null 2>&1; then
+              echo "OK"
+            else
+              echo "FAILED"
+              failed=1
+            fi
+          done
+          exit $failed
+
+      - name: Dump logs on failure
+        if: failure()
+        run: docker compose logs --tail=100
+
+      - name: Tear down stack
+        if: always()
+        run: docker compose down -v

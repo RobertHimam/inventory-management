@@ -875,43 +875,40 @@ Fail build if below thresholds.
 
 ## CI/CD Pipeline
 
+Implemented in `.github/workflows/ci.yml`. Triggered on push/PR to `main` and `develop`.
+
 ```
-Stage 1: Lint
+Job: lint           (Stage 1)
 ├── ESLint
 ├── Prettier check
 └── TypeScript type checking
 
-Stage 2: Unit Test
-├── Run all unit tests
-└── Coverage report
+Job: test           (Stage 2 + 3 + 4, needs: lint)
+├── pnpm test:coverage
+├── Unit + integration tests run together via Jest
+├── Coverage gate: statements/functions/lines >= 80%, branches >= 70%
+└── Coverage artifact uploaded on every run
 
-Stage 3: Integration Test
-├── Spin up MongoDB (Memory or Docker)
-├── Run integration tests
-└── Coverage report
+Job: build          (Stage 5, needs: test)
+├── pnpm build (recursive across all packages + services)
+└── Output to dist/ per service
 
-Stage 4: Coverage Check
-├── Enforce >= 80% thresholds
-└── Fail if below
+Job: docker-build   (Stage 6, needs: build)
+├── Matrix strategy: 9 services built in parallel
+├── docker/build-push-action with GHA layer cache
+└── push: false (CI validation only)
 
-Stage 5: Build
-├── pnpm --filter <service> build
-└── Output to dist/
+Job: smoke-test     (Stage 7, needs: docker-build)
+├── docker compose up -d --build
+├── Wait for MongoDB + RabbitMQ healthchecks
+├── curl gateway /health (port 3000)
+├── docker exec /health on each internal service
+└── docker compose down -v (always, even on failure)
 
-Stage 6: Docker Build
-├── docker build for each service
-└── Push to registry (if CI)
-
-Stage 7: Docker Compose Smoke Test
-├── docker compose up -d
-├── Wait for health checks
-├── curl /health on all services
-└── Tail logs for errors
-
-Stage 8: Deploy (manual or auto)
+Stage 8: Deploy (manual)
 ```
 
-**Quality Gates**: Pipeline fails at first failure. No exceptions.
+**Quality Gates**: Each job depends on the previous. Pipeline fails at first failure. No exceptions.
 
 ---
 

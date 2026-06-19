@@ -428,25 +428,23 @@ Users:
 
 ## CI/CD Pipeline
 
+Implemented in `.github/workflows/ci.yml` (GitHub Actions).
+
 Quality gates in order:
 
 ```
-Lint
+Lint            — ESLint + Prettier + TypeScript type-check
 ↓
-Unit Test
+Test & Coverage — Jest (unit + integration) + coverage gate ≥80%
 ↓
-Integration Test
+Build           — pnpm build all packages and services
 ↓
-Coverage Check
+Docker Build    — parallel matrix build of all 9 service images
 ↓
-Build
-↓
-Docker Build
-↓
-Docker Compose Smoke Test
+Smoke Test      — docker compose up, health check all services
 ```
 
-Pipeline fails if any stage fails.
+Pipeline fails if any stage fails. Triggered on push/PR to `main` and `develop`.
 
 ## Definition of Done
 
@@ -506,24 +504,22 @@ pnpm --filter gateway dev
 pnpm --filter product-service dev
 ```
 
-4. **Access the API**
+4. **Access the application**
 
-- Gateway: `http://localhost:3000`
-- Frontend: `http://localhost:5173` (if running)
+- Gateway API: `http://localhost:3000`
+- Frontend: `http://localhost:3001`
+- RabbitMQ Management: `http://localhost:15672` (admin/admin123)
 - Health checks: `GET /health` on each service
 - API Docs: `GET /api-docs` on each service
 
 ### Running Tests
 
 ```bash
-# All services
+# All tests
 pnpm test
 
-# Specific service
-pnpm --filter product-service test
-
-# With coverage
-pnpm --filter product-service test:cov
+# With coverage (enforces 80% thresholds)
+pnpm test:coverage
 ```
 
 ## Configuration
@@ -574,6 +570,10 @@ Common config:
 
 - `GET /notifications` - List user notifications (authenticated)
 - `PATCH /notifications/:id/read` - Mark notification as read
+
+- `GET /audit` - List audit logs with filters (ADMIN only)
+- `GET /audit/:id` - Get audit log entry (ADMIN only)
+- `GET /audit/correlation/:correlationId` - Trace distributed transaction (ADMIN only)
 
 ### SSE Endpoints
 
