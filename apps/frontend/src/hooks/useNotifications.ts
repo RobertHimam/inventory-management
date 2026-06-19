@@ -18,7 +18,7 @@ export function useMarkAsRead() {
   return useMutation({
     mutationFn: (id: string) => markAsReadApi(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.list() })
+      void queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.list() })
     },
   })
 }

@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useAuthStore } from '../store/authStore'
 
-const SSE_BASE = (typeof __API_URL__ !== 'undefined' ? __API_URL__ : undefined) ?? 'http://localhost:4000'
-
 declare const __API_URL__: string | undefined
+
+const SSE_BASE = (typeof __API_URL__ !== 'undefined' ? __API_URL__ : undefined) ?? 'http://localhost:4000'
 
 export interface SSEHandlers {
   onStockIn?: (payload: unknown) => void
@@ -24,16 +24,16 @@ export function useSSE(handlers: SSEHandlers) {
     const es = new EventSource(url)
 
     es.addEventListener('stock_in', (e) => {
-      try { handlersRef.current.onStockIn?.(JSON.parse(e.data)) } catch {}
+      try { handlersRef.current.onStockIn?.(JSON.parse(e.data)) } catch (_e) { /* ignore parse errors */ }
     })
     es.addEventListener('stock_out', (e) => {
-      try { handlersRef.current.onStockOut?.(JSON.parse(e.data)) } catch {}
+      try { handlersRef.current.onStockOut?.(JSON.parse(e.data)) } catch (_e) { /* ignore parse errors */ }
     })
     es.addEventListener('low_stock', (e) => {
-      try { handlersRef.current.onLowStock?.(JSON.parse(e.data)) } catch {}
+      try { handlersRef.current.onLowStock?.(JSON.parse(e.data)) } catch (_e) { /* ignore parse errors */ }
     })
     es.addEventListener('notification', (e) => {
-      try { handlersRef.current.onNotification?.(JSON.parse(e.data)) } catch {}
+      try { handlersRef.current.onNotification?.(JSON.parse(e.data)) } catch (_e) { /* ignore parse errors */ }
     })
 
     return () => es.close()

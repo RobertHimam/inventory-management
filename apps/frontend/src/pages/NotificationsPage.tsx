@@ -9,7 +9,7 @@ export function NotificationsPage() {
 
   useSSE({
     onNotification: () => {
-      queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.list() })
+      void queryClient.invalidateQueries({ queryKey: NOTIFICATION_KEYS.list() })
     },
   })
 
