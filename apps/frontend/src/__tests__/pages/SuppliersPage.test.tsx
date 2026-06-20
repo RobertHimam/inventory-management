@@ -24,7 +24,7 @@ jest.mock('../../store/authStore', () => ({
 }))
 
 import { useAuthStore } from '../../store/authStore'
-const mockUseAuthStore = useAuthStore as jest.Mock
+const mockUseAuthStore = useAuthStore as unknown as jest.Mock
 
 const SUPPLIERS = [
   { _id: 'sup1', name: 'Acme Corp', contactEmail: 'acme@example.com', phone: '555-1234', address: '123 Main St', deletedAt: null, deletedBy: null, createdAt: new Date(), updatedAt: new Date() },

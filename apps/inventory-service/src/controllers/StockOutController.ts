@@ -3,7 +3,7 @@ import { StockOutService } from '../services/StockOutService';
 import { StockOutDto } from '../validation/inventory.validation';
 import { ValidationError, ConflictError, NotFoundError } from '../errors';
 
-type AuthReq = import('express').Request & { user?: { userId: string; role: string }; correlationId?: string };
+type AuthReq = import('express').Request & { user?: { userId: string; username: string; role: string }; correlationId?: string };
 
 export class StockOutController {
   constructor(private readonly stockOutService: StockOutService) {}

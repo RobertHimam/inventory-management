@@ -19,7 +19,9 @@
     "docker:build": "docker-compose build",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
-    "docker:logs": "docker-compose logs -f"
+    "docker:logs": "docker-compose logs -f",
+    "seed": "bash scripts/seed.sh",
+    "seed:mongo": "node scripts/seed-mongo.js"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",

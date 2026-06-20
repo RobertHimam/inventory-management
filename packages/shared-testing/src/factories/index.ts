@@ -28,7 +28,7 @@ export const productFixture: Product = {
 };
 
 export const categoryFixture: Category = {
-  id: 'cat-1',
+  _id: 'cat-1',
   name: 'General',
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -37,7 +37,7 @@ export const categoryFixture: Category = {
 };
 
 export const supplierFixture: Supplier = {
-  id: 'sup-1',
+  _id: 'sup-1',
   name: 'Acme Corp',
   contactEmail: 'contact@example.com',
   createdAt: new Date(),
@@ -97,7 +97,7 @@ export function createProduct(overrides?: Partial<CreateProductDto> & Partial<Pr
 
 export function createCategory(overrides?: Partial<Category>): Category {
   const base: Category = {
-    id: nanoid(),
+    _id: nanoid(),
     name: 'Unnamed Category',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -109,7 +109,7 @@ export function createCategory(overrides?: Partial<Category>): Category {
 
 export function createSupplier(overrides?: Partial<Supplier>): Supplier {
   const base: Supplier = {
-    id: nanoid(),
+    _id: nanoid(),
     name: 'Unnamed Supplier',
     contactEmail: '',
     createdAt: new Date(),

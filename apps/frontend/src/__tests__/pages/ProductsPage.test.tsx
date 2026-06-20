@@ -24,7 +24,7 @@ jest.mock('../../store/authStore', () => ({
 }))
 
 import { useAuthStore } from '../../store/authStore'
-const mockUseAuthStore = useAuthStore as jest.Mock
+const mockUseAuthStore = useAuthStore as unknown as jest.Mock
 
 const PRODUCTS = [
   {

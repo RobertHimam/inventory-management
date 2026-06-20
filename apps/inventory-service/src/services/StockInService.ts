@@ -62,12 +62,12 @@ export class StockInService {
             correlationId: cid,
             userId: user.userId,
             username: user.username,
-            role: user.role,
+            role: user.role as import("@inventory/shared-types").Role,
             action: AuditAction.CREATE,
             resourceType: 'StockIn',
             resourceId: transaction.id,
             before: null,
-            after: (transaction as { toObject?: () => Record<string, unknown> }).toObject ? (transaction as { toObject?: () => Record<string, unknown> }).toObject()! : transaction,
+            after: (transaction as { toObject?: () => Record<string, unknown> }).toObject?.() ?? (transaction as unknown as Record<string, unknown>),
             metadata: { productId, quantity },
           });
           try {

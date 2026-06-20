@@ -43,13 +43,10 @@ export class AuditRepository implements IAuditRepository {
     }
 
     if (startDate || endDate) {
-      query.createdAt = {};
-      if (startDate) {
-        query.createdAt.$gte = new Date(startDate);
-      }
-      if (endDate) {
-        query.createdAt.$lte = new Date(endDate);
-      }
+      const dateRange: { $gte?: Date; $lte?: Date } = {};
+      if (startDate) dateRange.$gte = new Date(startDate);
+      if (endDate) dateRange.$lte = new Date(endDate);
+      query.createdAt = dateRange;
     }
 
     if (search) {

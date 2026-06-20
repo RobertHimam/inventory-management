@@ -61,7 +61,7 @@ export class ReportService {
   }
 
   async handleStockOut(payload: unknown): Promise<void> {
-    const { productId, quantity, userId } = payload as { productId: string; quantity: number; userId: string; createdAt?: Date };
+    const { productId, quantity, userId, createdAt } = payload as { productId: string; quantity: number; userId: string; createdAt?: Date };
     this.logger.info('Handling stock.out.created in ReportService', { productId, quantity });
     
     // Find product to get price
@@ -82,7 +82,7 @@ export class ReportService {
       price,
       totalAmount: quantity * price,
       soldBy: userId,
-      createdAt: payload.createdAt || new Date(),
+      createdAt: createdAt ?? new Date(),
     });
 
     // Invalidate sales and dashboard caches

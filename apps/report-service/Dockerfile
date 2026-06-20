@@ -4,7 +4,7 @@ RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
 WORKDIR /app
 
 # Workspace manifests (all needed for frozen-lockfile resolution)
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.base.json ./
 
 # All package.json files so pnpm resolves the full workspace graph
 COPY packages/shared-auth/package.json      ./packages/shared-auth/

@@ -54,7 +54,7 @@ export class InventoryRepository implements IInventoryRepository {
     }
 
     const sortOrder = order === 'asc' ? 1 : -1;
-    const sortOptions: Record<string, number> = { [sort]: sortOrder };
+    const sortOptions: { [key: string]: 1 | -1 } = { [sort]: sortOrder };
 
     const skip = (page - 1) * limit;
 

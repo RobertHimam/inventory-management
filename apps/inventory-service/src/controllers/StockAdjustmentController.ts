@@ -3,7 +3,7 @@ import { StockAdjustmentService } from '../services/StockAdjustmentService';
 import { StockAdjustmentDto } from '../validation/inventory.validation';
 import { ValidationError, ConflictError, NotFoundError } from '../errors';
 
-type AuthReq = import('express').Request & { user?: { userId: string; role: string }; correlationId?: string };
+type AuthReq = import('express').Request & { user?: { userId: string; username: string; role: string }; correlationId?: string };
 
 export class StockAdjustmentController {
   constructor(private readonly stockAdjustmentService: StockAdjustmentService) {}

@@ -1,11 +1,11 @@
 /** @jest-environment jsdom */
-import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import * as productApi from '../../api/productApi'
 import { ProductsPage } from '../../pages/ProductsPage'
 import { useAuthStore } from '../../store/authStore'
+import { Role } from '@inventory/shared-types'
 
 jest.mock('../../api/productApi')
 
@@ -38,7 +38,7 @@ function renderPage(isAdmin = true) {
       id: isAdmin ? 'u1' : 'u2',
       username: isAdmin ? 'admin' : 'user1',
       email: 'test@example.com',
-      role: isAdmin ? ('ADMIN' as const) : ('USER' as const),
+      role: isAdmin ? Role.ADMIN : Role.USER,
     },
     'mock-token'
   )

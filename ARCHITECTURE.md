@@ -498,7 +498,8 @@ Headers: Authorization: Bearer <access_token>
 **Authorization**:
 
 - Connection requires valid JWT (validated by gateway before proxying)
-- Events filtered by RBAC: users only see data they have permission to see
+- Events filtered by RBAC: users only see
+ data they have permission to see
 
 **Packages**: `apps/sse-service`
 

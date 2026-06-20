@@ -4,7 +4,7 @@ RUN corepack enable && corepack prepare pnpm@9.12.3 --activate
 WORKDIR /app
 
 # Workspace manifests
-COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml tsconfig.base.json ./
 
 # All package.json files for workspace resolution
 COPY packages/shared-auth/package.json      ./packages/shared-auth/

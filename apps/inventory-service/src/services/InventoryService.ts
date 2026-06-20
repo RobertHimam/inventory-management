@@ -1,5 +1,5 @@
 import { IInventoryRepository } from '../repositories/interfaces/IInventoryRepository';
-import { ListInventoryQueryDto, listInventoryQuerySchema } from '../validation/inventory.validation';
+import { listInventoryQuerySchema } from '../validation/inventory.validation';
 import { ValidationError, NotFoundError } from '../errors';
 
 export class InventoryService {
@@ -13,7 +13,7 @@ export class InventoryService {
     return item;
   }
 
-  async listItems(query: ListInventoryQueryDto): Promise<Record<string, unknown>> {
+  async listItems(query: Record<string, unknown>): Promise<Record<string, unknown>> {
     const validationResult = listInventoryQuerySchema.safeParse(query);
     if (!validationResult.success) {
       throw new ValidationError(
