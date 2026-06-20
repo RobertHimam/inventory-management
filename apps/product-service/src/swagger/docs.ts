@@ -5,9 +5,22 @@ export const swaggerDefinition = {
   info: {
     title: 'Product Service API',
     version: '1.0.0',
+    description: 'Product operations for Inventory Management',
+    contact: {
+      name: 'API Support',
+      email: 'support@inventory-management.local',
+    },
   },
-  servers: [{ url: '/api/v1' }],
-  tags: [{ name: 'Products', description: 'Product operations' }],
+  servers: [
+    {
+      url: 'http://localhost:3000',
+      description: 'Gateway',
+    },
+  ],
+  tags: [
+    { name: 'Products', description: 'Product operations' },
+    { name: 'Categories', description: 'Category operations' },
+  ],
   components: {
     securitySchemes: {
       BearerAuth: {

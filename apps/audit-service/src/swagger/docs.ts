@@ -5,8 +5,18 @@ export const swaggerDefinition = {
   info: {
     title: 'Audit Service API',
     version: '1.0.0',
+    description: 'Audit trail operations for Inventory Management',
+    contact: {
+      name: 'API Support',
+      email: 'support@inventory-management.local',
+    },
   },
-  servers: [{ url: '/api/v1' }],
+  servers: [
+    {
+      url: 'http://localhost:3000',
+      description: 'Gateway',
+    },
+  ],
   tags: [{ name: 'Audit', description: 'Audit trail operations' }],
   components: {
     securitySchemes: {

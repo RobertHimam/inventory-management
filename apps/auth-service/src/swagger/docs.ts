@@ -11,8 +11,8 @@ const swaggerDefinition = {
   },
   servers: [
     {
-      url: `http://localhost:${config.port}`,
-      description: 'Development server',
+      url: 'http://localhost:3000',
+      description: 'Gateway',
     },
   ],
   components: {

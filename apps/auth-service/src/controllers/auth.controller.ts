@@ -5,6 +5,32 @@ import { AuthenticationError } from '../errors';
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  /**
+   * @swagger
+   * /auth/register:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Register a new user
+   *     description: Creates a new user account with the provided credentials
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/RegisterRequest'
+   *     responses:
+   *       201:
+   *         description: User successfully registered
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/User'
+   *       400:
+   *         description: Invalid input or user already exists
+   *       500:
+   *         description: Server error
+   */
   async register(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password, username, role } = req.body as {
@@ -20,6 +46,37 @@ export class AuthController {
     }
   }
 
+  /**
+   * @swagger
+   * /auth/login:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: User login
+   *     description: Authenticates a user and returns access token (refresh token in HttpOnly cookie)
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/LoginRequest'
+   *     responses:
+   *       200:
+   *         description: User successfully authenticated
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/TokenResponse'
+   *         headers:
+   *           Set-Cookie:
+   *             schema:
+   *               type: string
+   *               example: refreshToken=abc123; HttpOnly; Secure; SameSite=Strict
+   *       401:
+   *         description: Invalid credentials
+   *       500:
+   *         description: Server error
+   */
   async login(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { email, password } = req.body as { email: string; password: string };
@@ -38,6 +95,31 @@ export class AuthController {
     }
   }
 
+  /**
+   * @swagger
+   * /auth/refresh:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: Refresh access token
+   *     description: Uses refresh token from cookie to issue a new access token
+   *     responses:
+   *       200:
+   *         description: New access token issued
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/RefreshResponse'
+   *         headers:
+   *           Set-Cookie:
+   *             schema:
+   *               type: string
+   *               example: refreshToken=abc123; HttpOnly; Secure; SameSite=Strict
+   *       401:
+   *         description: No refresh token or token expired
+   *       500:
+   *         description: Server error
+   */
   async refresh(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;
@@ -59,6 +141,20 @@ export class AuthController {
     }
   }
 
+  /**
+   * @swagger
+   * /auth/logout:
+   *   post:
+   *     tags:
+   *       - Authentication
+   *     summary: User logout
+   *     description: Invalidates the refresh token and clears the refresh token cookie
+   *     responses:
+   *       204:
+   *         description: User successfully logged out
+   *       500:
+   *         description: Server error
+   */
   async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const refreshToken = req.cookies?.refreshToken as string | undefined;
