@@ -1,5 +1,4 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { z } from 'zod';
 import swaggerJsdoc from 'swagger-jsdoc';
@@ -11,7 +10,6 @@ import { ReportService } from './services/ReportService';
 export function createApp(reportService: ReportService, jwtSecret: string): Application {
   const app = express();
 
-  app.use(cors());
   app.use(express.json());
   app.use(cookieParser());
 
@@ -22,11 +20,21 @@ export function createApp(reportService: ReportService, jwtSecret: string): Appl
       title: 'Report Service API',
       version: '0.1.0',
       description: 'API documentation for the Report Service',
+      contact: {
+        name: 'API Support',
+        email: 'support@inventory-management.local',
+      },
     },
     servers: [
       {
-        url: '/api/v1',
-        description: 'Development Server',
+        url: 'http://localhost:3000',
+        description: 'Gateway',
+      },
+    ],
+    tags: [
+      {
+        name: 'Reports',
+        description: 'Reporting operations',
       },
     ],
     components: {
@@ -42,7 +50,7 @@ export function createApp(reportService: ReportService, jwtSecret: string): Appl
 
   const swaggerSpec = swaggerJsdoc({
     definition: swaggerDefinition,
-    apis: [], // Can add inline doc annotations if necessary
+    apis: [__filename],
   });
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -62,9 +70,39 @@ export function createApp(reportService: ReportService, jwtSecret: string): Appl
   });
 
   // Endpoints
-  
-  // GET /reports/dashboard (USER and above)
-  app.get('/api/v1/reports/dashboard', auth, async (req: Request, res: Response, next: NextFunction) => {
+
+  /**
+   * @swagger
+   * /reports/dashboard:
+   *   get:
+   *     tags:
+   *       - Reports
+   *     summary: Get dashboard metrics
+   *     description: Retrieves dashboard metrics for authenticated users. Results are cached by role.
+   *     security:
+   *       - BearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Dashboard metrics retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   description: Dashboard metrics data
+   *                 source:
+   *                   type: string
+   *                   enum: [cache, db]
+   *       401:
+   *         description: Unauthorized - missing or invalid token
+   *       500:
+   *         description: Server error
+   */
+  app.get('/reports/dashboard', auth, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as import('express').Request & { user?: { role: string } }).user;
       const cacheKey = `dashboard:${user?.role || 'USER'}`;
@@ -84,8 +122,55 @@ export function createApp(reportService: ReportService, jwtSecret: string): Appl
     }
   });
 
-  // GET /reports/sales (ADMIN only)
-  app.get('/api/v1/reports/sales', auth, async (req: Request, res: Response, next: NextFunction) => {
+  /**
+   * @swagger
+   * /reports/sales:
+   *   get:
+   *     tags:
+   *       - Reports
+   *     summary: Get sales report
+   *     description: Retrieves sales report for a date range. ADMIN only. Results are cached.
+   *     security:
+   *       - BearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: startDate
+   *         schema:
+   *           type: string
+   *           format: date-time
+   *         description: Start date in ISO 8601 format (optional)
+   *       - in: query
+   *         name: endDate
+   *         schema:
+   *           type: string
+   *           format: date-time
+   *         description: End date in ISO 8601 format (optional)
+   *     responses:
+   *       200:
+   *         description: Sales report retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   description: Sales report data
+   *                 source:
+   *                   type: string
+   *                   enum: [cache, db]
+   *       400:
+   *         description: Validation error in query parameters
+   *       401:
+   *         description: Unauthorized - missing or invalid token
+   *       403:
+   *         description: Forbidden - requires ADMIN role
+   *       500:
+   *         description: Server error
+   */
+  app.get('/reports/sales', auth, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as import('express').Request & { user?: { role: string } }).user;
       if (user?.role !== Role.ADMIN) {
@@ -122,8 +207,40 @@ export function createApp(reportService: ReportService, jwtSecret: string): Appl
     }
   });
 
-  // GET /reports/inventory-valuation (ADMIN only)
-  app.get('/api/v1/reports/inventory-valuation', auth, async (req: Request, res: Response, next: NextFunction) => {
+  /**
+   * @swagger
+   * /reports/inventory-valuation:
+   *   get:
+   *     tags:
+   *       - Reports
+   *     summary: Get inventory valuation report
+   *     description: Retrieves inventory valuation report. ADMIN only. Results are cached.
+   *     security:
+   *       - BearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Inventory valuation report retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   description: Inventory valuation data
+   *                 source:
+   *                   type: string
+   *                   enum: [cache, db]
+   *       401:
+   *         description: Unauthorized - missing or invalid token
+   *       403:
+   *         description: Forbidden - requires ADMIN role
+   *       500:
+   *         description: Server error
+   */
+  app.get('/reports/inventory-valuation', auth, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as import('express').Request & { user?: { role: string } }).user;
       if (user?.role !== Role.ADMIN) {
@@ -147,8 +264,38 @@ export function createApp(reportService: ReportService, jwtSecret: string): Appl
     }
   });
 
-  // GET /reports/low-stock (USER and above)
-  app.get('/api/v1/reports/low-stock', auth, async (_req: Request, res: Response, next: NextFunction) => {
+  /**
+   * @swagger
+   * /reports/low-stock:
+   *   get:
+   *     tags:
+   *       - Reports
+   *     summary: Get low stock items report
+   *     description: Retrieves a report of items with low stock levels. Results are cached.
+   *     security:
+   *       - BearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Low stock report retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: array
+   *                   description: Array of low stock items
+   *                 source:
+   *                   type: string
+   *                   enum: [cache, db]
+   *       401:
+   *         description: Unauthorized - missing or invalid token
+   *       500:
+   *         description: Server error
+   */
+  app.get('/reports/low-stock', auth, async (_req: Request, res: Response, next: NextFunction) => {
     try {
       const cacheKey = 'low-stock';
       const cached = await reportService.getCachedReport(cacheKey);

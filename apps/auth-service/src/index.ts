@@ -1,5 +1,3 @@
-import '../models/user.model';
-import '../models/refreshToken.model';
 import mongoose from 'mongoose';
 import app from './app';
 import { config } from './config';

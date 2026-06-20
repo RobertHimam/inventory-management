@@ -48,6 +48,7 @@ export class EventBus {
 
   async publish(eventType: string, payload: unknown, correlationId?: string): Promise<void> {
     const channel = this.connection.getChannel();
+    await channel.assertExchange(this.exchange, 'topic', { durable: true });
     const routingKey = eventType;
     const message = Buffer.from(JSON.stringify(payload));
     if (correlationId) {

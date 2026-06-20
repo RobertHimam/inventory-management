@@ -224,6 +224,7 @@ export function createApp(jwtSecret: string): Application {
   app.use('/auth', authLimiter);
   // Apply General rate limits to all other requests
   app.use('/products', generalLimiter);
+  app.use('/categories', generalLimiter);
   app.use('/inventory', generalLimiter);
   app.use('/reports', generalLimiter);
   app.use('/notifications', generalLimiter);
@@ -233,6 +234,7 @@ export function createApp(jwtSecret: string): Application {
   // Reverse Proxy Routing mappings
   app.use('/auth', proxyTo(config.authServiceUrl));
   app.use('/products', proxyTo(config.productServiceUrl));
+  app.use('/categories', proxyTo(config.productServiceUrl));
   app.use('/inventory', proxyTo(config.inventoryServiceUrl));
   app.use('/reports', proxyTo(config.reportServiceUrl));
   app.use('/notifications', proxyTo(config.notificationServiceUrl));

@@ -1,5 +1,4 @@
 import express, { Application } from 'express';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
@@ -13,7 +12,6 @@ export const createApp = (): Application => {
   const app = express();
 
   // Middleware
-  app.use(cors());
   app.use(cookieParser());
   app.use(express.json());
   app.use(correlationMiddleware);
@@ -26,8 +24,8 @@ export const createApp = (): Application => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   // Routes
-  app.use('/api/v1/inventory', inventoryRoutes);
-  app.use('/api/v1', healthRoutes);
+  app.use('/inventory', inventoryRoutes);
+  app.use('/', healthRoutes);
 
   // Error handling
   app.use(errorMiddleware);

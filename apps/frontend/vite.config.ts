@@ -10,6 +10,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@inventory/shared-types': fileURLToPath(new URL('../../packages/shared-types/src/index.ts', import.meta.url)),
     },
   },
   server: {

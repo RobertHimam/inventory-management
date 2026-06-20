@@ -52,10 +52,13 @@ services:
       NODE_ENV: production
       PORT: 3000
       MONGODB_URI: mongodb://admin:admin123@mongodb:27017/auth?authSource=admin
+      AUTH_DB: auth
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      RABBITMQ_EXCHANGE: inventory.events
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars+}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
-      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-change-me-refresh-secret-32chars+}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-900}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-604800}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -74,8 +77,10 @@ services:
       NODE_ENV: production
       PORT: 3000
       MONGODB_URI: mongodb://admin:admin123@mongodb:27017/products?authSource=admin
+      PRODUCT_DB: products
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       RABBITMQ_EXCHANGE: inventory.events
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars+}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -94,8 +99,10 @@ services:
       NODE_ENV: production
       PORT: 3000
       MONGODB_URI: mongodb://admin:admin123@mongodb:27017/inventory?authSource=admin
+      INVENTORY_DB: inventory
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       RABBITMQ_EXCHANGE: inventory.events
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars+}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -114,6 +121,7 @@ services:
       NODE_ENV: production
       PORT: 3000
       MONGODB_URI: mongodb://admin:admin123@mongodb:27017/reports?authSource=admin
+      REPORT_DB: reports
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
     depends_on:
       mongodb:
@@ -153,9 +161,11 @@ services:
       NODE_ENV: production
       PORT: 3000
       MONGODB_URI: mongodb://admin:admin123@mongodb:27017/audit?authSource=admin
+      AUDIT_DB: audit
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       RABBITMQ_EXCHANGE: inventory.events
       RABBITMQ_DLQ_SUFFIX: .dlq
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars+}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -174,6 +184,7 @@ services:
       NODE_ENV: production
       PORT: 3000
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      RABBITMQ_EXCHANGE: inventory.events
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars+}
     depends_on:
       rabbitmq:
@@ -203,6 +214,7 @@ services:
       SSE_SERVICE_URL: http://sse-service:3000
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       MONGODB_URI: mongodb://admin:admin123@mongodb:27017/gateway?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars+}
     depends_on:
       mongodb:
         condition: service_healthy

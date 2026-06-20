@@ -1,5 +1,4 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { verifyAccessToken } from '@inventory/shared-auth';
 import { SSEService } from './services/SSEService';
@@ -15,7 +14,6 @@ export interface AuthenticatedRequest extends Request {
 export function createApp(sseService: SSEService, jwtSecret: string): Application {
   const app = express();
 
-  app.use(cors());
   app.use(express.json());
   app.use(cookieParser());
 

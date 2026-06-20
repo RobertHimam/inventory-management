@@ -1,9 +1,20 @@
+import mongoose from 'mongoose';
 import { createApp } from './app';
 import { config } from './config';
 
-const app = createApp();
+async function start() {
+  await mongoose.connect(config.mongodbUri, { dbName: config.productDb });
 
-app.listen(config.port, () => {
+  const app = createApp();
+
+  app.listen(config.port, () => {
+    // eslint-disable-next-line no-console
+    console.log(`Product Service listening on port ${config.port}`);
+  });
+}
+
+start().catch((err) => {
   // eslint-disable-next-line no-console
-  console.log(`Product Service listening on port ${config.port}`);
+  console.error('Failed to start product-service:', err);
+  process.exit(1);
 });

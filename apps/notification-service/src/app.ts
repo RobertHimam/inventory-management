@@ -1,5 +1,4 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
-import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
@@ -9,7 +8,6 @@ import { NotificationService } from './services/NotificationService';
 export function createApp(notificationService: NotificationService, jwtSecret: string): Application {
   const app = express();
 
-  app.use(cors());
   app.use(express.json());
   app.use(cookieParser());
 
@@ -20,18 +18,37 @@ export function createApp(notificationService: NotificationService, jwtSecret: s
       title: 'Notification Service API',
       version: '0.1.0',
       description: 'API documentation for the Notification Service',
+      contact: {
+        name: 'API Support',
+        email: 'support@inventory-management.local',
+      },
     },
     servers: [
       {
-        url: '/api/v1',
-        description: 'Development Server',
+        url: 'http://localhost:3000',
+        description: 'Gateway',
       },
     ],
+    tags: [
+      {
+        name: 'Notifications',
+        description: 'User notification operations',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
   };
 
   const swaggerSpec = swaggerJsdoc({
     definition: swaggerDefinition,
-    apis: [],
+    apis: [__filename],
   });
 
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -43,8 +60,37 @@ export function createApp(notificationService: NotificationService, jwtSecret: s
 
   const auth = authenticate(jwtSecret);
 
-  // GET /notifications
-  app.get('/api/v1/notifications', auth, async (req: Request, res: Response, next: NextFunction) => {
+  /**
+   * @swagger
+   * /notifications:
+   *   get:
+   *     tags:
+   *       - Notifications
+   *     summary: Get user notifications
+   *     description: Retrieves all notifications for the authenticated user
+   *     security:
+   *       - BearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Notifications retrieved successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     description: Notification object
+   *       401:
+   *         description: Unauthorized - missing or invalid token
+   *       500:
+   *         description: Server error
+   */
+  app.get('/notifications', auth, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as Request & { user?: { userId: string } }).user;
       if (!user) {
@@ -59,8 +105,46 @@ export function createApp(notificationService: NotificationService, jwtSecret: s
     }
   });
 
-  // PATCH /notifications/:id/read
-  app.patch('/api/v1/notifications/:id/read', auth, async (req: Request, res: Response, next: NextFunction) => {
+  /**
+   * @swagger
+   * /notifications/{id}/read:
+   *   patch:
+   *     tags:
+   *       - Notifications
+   *     summary: Mark notification as read
+   *     description: Marks a specific notification as read for the authenticated user
+   *     security:
+   *       - BearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Notification ID
+   *     responses:
+   *       200:
+   *         description: Notification marked as read successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                 data:
+   *                   type: object
+   *                   description: Updated notification object
+   *       401:
+   *         description: Unauthorized - missing or invalid token
+   *       403:
+   *         description: Forbidden - user cannot mark this notification as read
+   *       404:
+   *         description: Notification not found
+   *       500:
+   *         description: Server error
+   */
+  app.patch('/notifications/:id/read', auth, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = (req as Request & { user?: { userId: string } }).user;
       if (!user) {
