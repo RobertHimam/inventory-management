@@ -212,7 +212,7 @@ export class MockRepository<T extends { id?: string; _id?: string }> {
   private items: Map<string, T> = new Map();
 
   private key(entity: T): string {
-    return (entity as any)._id ?? (entity as any).id ?? '';
+    return entity._id ?? entity.id ?? '';
   }
 
   clear(): void {
