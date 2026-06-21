@@ -113,6 +113,7 @@ const canRead = authorize(['audit:read']);
  *         description: Internal server error
  */
 router.get('/', auth, canRead, auditController.listAuditLogs.bind(auditController));
+router.get('/api/v1/audit', auth, canRead, auditController.listAuditLogs.bind(auditController));
 
 export default router;
 export { auditService };

@@ -49,7 +49,7 @@ describe('Authorization Rules (RBAC)', () => {
   describe('Read Operations (ADMIN and USER allowed)', () => {
     it('should allow USER to list products', async () => {
       const res = await request(app)
-        .get('/api/v1/products')
+        .get('/products')
         .set('Authorization', `Bearer ${userToken}`);
       
       expect(res.status).toBe(200);
@@ -58,7 +58,7 @@ describe('Authorization Rules (RBAC)', () => {
 
     it('should allow ADMIN to list products', async () => {
       const res = await request(app)
-        .get('/api/v1/products')
+        .get('/products')
         .set('Authorization', `Bearer ${adminToken}`);
       
       expect(res.status).toBe(200);
@@ -67,7 +67,7 @@ describe('Authorization Rules (RBAC)', () => {
 
     it('should deny access if no token is provided', async () => {
       const res = await request(app)
-        .get('/api/v1/products');
+        .get('/products');
       
       expect(res.status).toBe(401);
       expect(res.body.success).toBe(false);
@@ -85,7 +85,7 @@ describe('Authorization Rules (RBAC)', () => {
 
     it('should allow ADMIN to create product', async () => {
       const res = await request(app)
-        .post('/api/v1/products')
+        .post('/products')
         .set('Authorization', `Bearer ${adminToken}`)
         .set('Idempotency-Key', 'auth-admin-key-1')
         .send(productData);
@@ -96,7 +96,7 @@ describe('Authorization Rules (RBAC)', () => {
 
     it('should deny USER from creating product', async () => {
       const res = await request(app)
-        .post('/api/v1/products')
+        .post('/products')
         .set('Authorization', `Bearer ${userToken}`)
         .send(productData);
 
@@ -107,7 +107,7 @@ describe('Authorization Rules (RBAC)', () => {
     it('should deny USER from updating product', async () => {
       const someId = new mongoose.Types.ObjectId().toString();
       const res = await request(app)
-        .put(`/api/v1/products/${someId}`)
+        .put(`/products/${someId}`)
         .set('Authorization', `Bearer ${userToken}`)
         .send({ price: 250 });
 
@@ -118,7 +118,7 @@ describe('Authorization Rules (RBAC)', () => {
     it('should deny USER from deleting product', async () => {
       const someId = new mongoose.Types.ObjectId().toString();
       const res = await request(app)
-        .delete(`/api/v1/products/${someId}`)
+        .delete(`/products/${someId}`)
         .set('Authorization', `Bearer ${userToken}`);
 
       expect(res.status).toBe(403);

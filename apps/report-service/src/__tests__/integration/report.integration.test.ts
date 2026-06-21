@@ -59,10 +59,10 @@ describe('Report Service Integration Tests', () => {
     });
   });
 
-  describe('GET /api/v1/reports/dashboard', () => {
+  describe('GET /reports/dashboard', () => {
     it('should return 401 when no token is provided', async () => {
       await request(app)
-        .get('/api/v1/reports/dashboard')
+        .get('/reports/dashboard')
         .expect(401);
     });
 
@@ -91,7 +91,7 @@ describe('Report Service Integration Tests', () => {
       ]);
 
       const res = await request(app)
-        .get('/api/v1/reports/dashboard')
+        .get('/reports/dashboard')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
@@ -102,7 +102,7 @@ describe('Report Service Integration Tests', () => {
     });
   });
 
-  describe('GET /api/v1/reports/sales', () => {
+  describe('GET /reports/sales', () => {
     beforeEach(async () => {
       await SaleModel.create([
         {
@@ -130,7 +130,7 @@ describe('Report Service Integration Tests', () => {
       const token = createAccessToken({ sub: 'user-123', role: Role.USER }, jwtSecret);
 
       await request(app)
-        .get('/api/v1/reports/sales')
+        .get('/reports/sales')
         .set('Authorization', `Bearer ${token}`)
         .expect(403);
     });
@@ -139,7 +139,7 @@ describe('Report Service Integration Tests', () => {
       const token = createAccessToken({ sub: 'admin-123', role: Role.ADMIN }, jwtSecret);
 
       const res = await request(app)
-        .get('/api/v1/reports/sales')
+        .get('/reports/sales')
         .query({
           startDate: '2026-06-16T00:00:00Z',
           endDate: '2026-06-16T23:59:59Z',
@@ -158,7 +158,7 @@ describe('Report Service Integration Tests', () => {
       const token = createAccessToken({ sub: 'admin-123', role: Role.ADMIN }, jwtSecret);
 
       await request(app)
-        .get('/api/v1/reports/sales')
+        .get('/reports/sales')
         .query({
           startDate: 'invalid-date',
         })
@@ -167,12 +167,12 @@ describe('Report Service Integration Tests', () => {
     });
   });
 
-  describe('GET /api/v1/reports/inventory-valuation', () => {
+  describe('GET /reports/inventory-valuation', () => {
     it('should block USER role (ADMIN only)', async () => {
       const token = createAccessToken({ sub: 'user-123', role: Role.USER }, jwtSecret);
 
       await request(app)
-        .get('/api/v1/reports/inventory-valuation')
+        .get('/reports/inventory-valuation')
         .set('Authorization', `Bearer ${token}`)
         .expect(403);
     });
@@ -193,7 +193,7 @@ describe('Report Service Integration Tests', () => {
       ]);
 
       const res = await request(app)
-        .get('/api/v1/reports/inventory-valuation')
+        .get('/reports/inventory-valuation')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
@@ -205,7 +205,7 @@ describe('Report Service Integration Tests', () => {
     });
   });
 
-  describe('GET /api/v1/reports/low-stock', () => {
+  describe('GET /reports/low-stock', () => {
     it('should return low stock report for USER', async () => {
       const token = createAccessToken({ sub: 'user-123', role: Role.USER }, jwtSecret);
 
@@ -231,7 +231,7 @@ describe('Report Service Integration Tests', () => {
       ]);
 
       const res = await request(app)
-        .get('/api/v1/reports/low-stock')
+        .get('/reports/low-stock')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 

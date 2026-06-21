@@ -23,13 +23,13 @@ describe('Fixtures', () => {
   });
   it('categoryFixture has expected fields', () => {
     expect(categoryFixture).toMatchObject({
-      id: 'cat-1',
+      _id: 'cat-1',
       name: 'General',
     });
   });
   it('supplierFixture has expected fields', () => {
     expect(supplierFixture).toMatchObject({
-      id: 'sup-1',
+      _id: 'sup-1',
       name: 'Acme Corp',
       contactEmail: 'contact@example.com',
     });
@@ -57,7 +57,7 @@ describe('Factories', () => {
   it('createCategory works', () => {
     const c = createCategory({ name: 'Cat' });
     expect(c.name).toBe('Cat');
-    expect(c.id).toBeDefined();
+    expect(c._id).toBeDefined();
   });
   it('createSupplier works', () => {
     const s = createSupplier({ name: 'Sup' });
@@ -79,13 +79,13 @@ describe('MockRepository', () => {
   });
   it('getAll returns all saved', () => {
     const repo = new MockRepository<Category>();
-    repo.save(createCategory({ id: 'c1' }));
-    repo.save(createCategory({ id: 'c2' }));
+    repo.save(createCategory({ _id: 'c1' }));
+    repo.save(createCategory({ _id: 'c2' }));
     expect(repo.getAll().length).toBe(2);
   });
   it('delete removes', () => {
     const repo = new MockRepository<Supplier>();
-    const s = createSupplier({ id: 's1' });
+    const s = createSupplier({ _id: 's1' });
     repo.save(s);
     expect(repo.delete('s1')).toBe(true);
     expect(repo.get('s1')).toBeUndefined();

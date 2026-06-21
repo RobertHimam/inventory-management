@@ -114,7 +114,7 @@ export function createApp(jwtSecret: string): Application {
       },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Correlation-ID', 'Idempotency-Key'],
     })
   );
 
@@ -225,16 +225,20 @@ export function createApp(jwtSecret: string): Application {
   // Apply General rate limits to all other requests
   app.use('/products', generalLimiter);
   app.use('/categories', generalLimiter);
+  app.use('/suppliers', generalLimiter);
   app.use('/inventory', generalLimiter);
   app.use('/reports', generalLimiter);
   app.use('/notifications', generalLimiter);
   app.use('/audit', generalLimiter);
   app.use('/events', generalLimiter);
+  app.use('/users', generalLimiter);
 
   // Reverse Proxy Routing mappings
   app.use('/auth', proxyTo(config.authServiceUrl));
+  app.use('/users', proxyTo(config.authServiceUrl));
   app.use('/products', proxyTo(config.productServiceUrl));
   app.use('/categories', proxyTo(config.productServiceUrl));
+  app.use('/suppliers', proxyTo(config.productServiceUrl));
   app.use('/inventory', proxyTo(config.inventoryServiceUrl));
   app.use('/reports', proxyTo(config.reportServiceUrl));
   app.use('/notifications', proxyTo(config.notificationServiceUrl));

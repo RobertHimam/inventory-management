@@ -1,0 +1,10 @@
+process.env.NODE_ENV = 'test';
+process.env.PORT = '3001';
+process.env.MONGODB_URI = 'mongodb://127.0.0.1:27017/auth-test';
+process.env.AUTH_DB = 'auth-test';
+process.env.JWT_SECRET = 'test-jwt-secret-key-1234';
+process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-key-5678';
+process.env.JWT_EXPIRES_IN = '900';
+process.env.JWT_REFRESH_EXPIRES_IN = '604800';
+process.env.RABBITMQ_URL = 'amqp://localhost:5672';
+process.env.RABBITMQ_EXCHANGE = 'test-exchange';

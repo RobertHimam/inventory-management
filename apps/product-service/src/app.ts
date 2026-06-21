@@ -6,6 +6,7 @@ import { correlationMiddleware } from './middleware/correlation.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
 import productRoutes from './routes/product.routes';
 import categoryRoutes from './routes/category.routes';
+import supplierRoutes from './routes/supplier.routes';
 import healthRoutes from './routes/health.routes';
 import { swaggerDefinition } from './swagger/docs';
 
@@ -27,6 +28,7 @@ export const createApp = (): Application => {
   // Routes
   app.use('/products', productRoutes);
   app.use('/categories', categoryRoutes);
+  app.use('/suppliers', supplierRoutes);
   app.use('/', healthRoutes);
 
   // Error handling

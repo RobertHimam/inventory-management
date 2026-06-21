@@ -1,4 +1,4 @@
-import { IUserRepository } from './interfaces/IUserRepository';
+import { IUserRepository, UserFindAllOptions, UserFindAllResult } from './interfaces/IUserRepository';
 import UserModel, { IUserDocument } from '../models/user.model';
 import { User } from '@inventory/shared-types';
 import { NotFoundError } from '../errors';
@@ -37,6 +37,17 @@ export class UserRepository implements IUserRepository {
       role: data.role,
     });
     return this.toUser(doc);
+  }
+
+  async findAll(options: UserFindAllOptions): Promise<UserFindAllResult> {
+    const { page = 1, limit = 10 } = options;
+    const query = { deletedAt: null };
+    const skip = (page - 1) * limit;
+    const [docs, total] = await Promise.all([
+      UserModel.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      UserModel.countDocuments(query),
+    ]);
+    return { data: docs.map((d) => this.toUser(d)), total };
   }
 
   async softDelete(id: string, deletedBy: string): Promise<void> {

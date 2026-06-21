@@ -16,7 +16,7 @@ async function start() {
     logger.info('MongoDB connected in Report Service');
 
     const reportService = new ReportService(logger);
-    const app = createApp(reportService, process.env.JWT_SECRET || 'test-secret');
+    const app = createApp(reportService, config.jwtSecret);
 
     // Connect to RabbitMQ
     const rabbitConn = new RabbitMQConnection(config.rabbitmqUrl);

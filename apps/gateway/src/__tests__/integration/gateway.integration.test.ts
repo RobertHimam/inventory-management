@@ -14,6 +14,7 @@ process.env.INVENTORY_SERVICE_URL = 'http://127.0.0.1:9001';
 process.env.NOTIFICATION_SERVICE_URL = 'http://127.0.0.1:9002';
 process.env.AUDIT_SERVICE_URL = 'http://127.0.0.1:9003';
 process.env.SSE_SERVICE_URL = 'http://127.0.0.1:9004';
+process.env.JWT_SECRET = 'gateway-secret';
 
 import request from 'supertest';
 import { createServer, Server } from 'http';

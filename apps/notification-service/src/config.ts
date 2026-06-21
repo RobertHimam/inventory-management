@@ -10,7 +10,7 @@ function getInt(key: string): number {
   return num;
 }
 
-const required = ['NODE_ENV', 'PORT', 'RABBITMQ_URL', 'RABBITMQ_EXCHANGE'];
+const required = ['NODE_ENV', 'PORT', 'RABBITMQ_URL', 'RABBITMQ_EXCHANGE', 'JWT_SECRET'];
 
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length > 0) {
@@ -24,5 +24,5 @@ export const config = {
   rabbitmqExchange: process.env.RABBITMQ_EXCHANGE!,
   mongodbUri: process.env.MONGODB_URI || 'mongodb://admin:admin123@mongodb:27017/audit',
   auditDb: process.env.AUDIT_DB || 'audit',
-  jwtSecret: process.env.JWT_SECRET || 'test-secret',
+  jwtSecret: process.env.JWT_SECRET!,
 };

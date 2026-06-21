@@ -56,16 +56,16 @@ describe('Factory Functions', () => {
     it('should create category with default values', () => {
       const category = createCategory();
       expect(category).toBeDefined();
-      expect(category.id).toBeDefined();
+      expect(category._id).toBeDefined();
       expect(category.name).toBe('Unnamed Category');
       expect(category.createdAt).toBeInstanceOf(Date);
       expect(category.updatedAt).toBeInstanceOf(Date);
     });
 
     it('should apply overrides', () => {
-      const category = createCategory({ name: 'Electronics', id: 'cat-123' });
+      const category = createCategory({ name: 'Electronics', _id: 'cat-123' });
       expect(category.name).toBe('Electronics');
-      expect(category.id).toBe('cat-123');
+      expect(category._id).toBe('cat-123');
     });
   });
 
@@ -73,7 +73,7 @@ describe('Factory Functions', () => {
     it('should create supplier with default values', () => {
       const supplier = createSupplier();
       expect(supplier).toBeDefined();
-      expect(supplier.id).toBeDefined();
+      expect(supplier._id).toBeDefined();
       expect(supplier.name).toBe('Unnamed Supplier');
       expect(supplier.contactEmail).toBe('');
       expect(supplier.createdAt).toBeInstanceOf(Date);
@@ -196,7 +196,7 @@ describe('Factory Functions', () => {
 
     it('categoryFixture should have valid structure', () => {
       expect(categoryFixture).toMatchObject({
-        id: 'cat-1',
+        _id: 'cat-1',
         name: 'General',
       });
       expect(categoryFixture.createdAt).toBeInstanceOf(Date);
@@ -205,7 +205,7 @@ describe('Factory Functions', () => {
 
     it('supplierFixture should have valid structure', () => {
       expect(supplierFixture).toMatchObject({
-        id: 'sup-1',
+        _id: 'sup-1',
         name: 'Acme Corp',
         contactEmail: 'contact@example.com',
       });
@@ -240,17 +240,17 @@ describe('Factory Functions', () => {
 
     it('should get all saved entities', () => {
       const repo = new MockRepository<Category>();
-      repo.save(createCategory({ id: 'c1', name: 'Cat 1' }));
-      repo.save(createCategory({ id: 'c2', name: 'Cat 2' }));
-      repo.save(createCategory({ id: 'c3', name: 'Cat 3' }));
+      repo.save(createCategory({ _id: 'c1', name: 'Cat 1' }));
+      repo.save(createCategory({ _id: 'c2', name: 'Cat 2' }));
+      repo.save(createCategory({ _id: 'c3', name: 'Cat 3' }));
       const all = repo.getAll();
       expect(all.length).toBe(3);
-      expect(all.map((c) => c.id).sort()).toEqual(['c1', 'c2', 'c3']);
+      expect(all.map((c) => c._id).sort()).toEqual(['c1', 'c2', 'c3']);
     });
 
     it('should delete entities', () => {
       const repo = new MockRepository<Supplier>();
-      const supplier = createSupplier({ id: 's1', name: 'Supplier 1' });
+      const supplier = createSupplier({ _id: 's1', name: 'Supplier 1' });
       repo.save(supplier);
       expect(repo.delete('s1')).toBe(true);
       expect(repo.get('s1')).toBeUndefined();

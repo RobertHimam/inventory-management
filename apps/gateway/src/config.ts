@@ -32,6 +32,7 @@ const required = [
   'SSE_SERVICE_URL',
   'RABBITMQ_URL',
   'MONGODB_URI',
+  'JWT_SECRET',
 ];
 
 const missing = required.filter((key) => !process.env[key]);
@@ -56,5 +57,5 @@ export const config = {
   rateLimitMaxRequests: process.env.RATE_LIMIT_MAX_REQUESTS ? getInt('RATE_LIMIT_MAX_REQUESTS') : 100,
   rateLimitAuthMax: process.env.RATE_LIMIT_AUTH_MAX ? getInt('RATE_LIMIT_AUTH_MAX') : 10,
   sseEnabled: process.env.SSE_ENABLED ? getBool('SSE_ENABLED') : true,
-  jwtSecret: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+  jwtSecret: process.env.JWT_SECRET!,
 };

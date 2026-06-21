@@ -61,10 +61,10 @@ describe('Notification Service Integration Tests', () => {
     });
   });
 
-  describe('GET /api/v1/notifications', () => {
+  describe('GET /notifications', () => {
     it('should return 401 when no token is provided', async () => {
       await request(app)
-        .get('/api/v1/notifications')
+        .get('/notifications')
         .expect(401);
     });
 
@@ -91,7 +91,7 @@ describe('Notification Service Integration Tests', () => {
       ]);
 
       const res = await request(app)
-        .get('/api/v1/notifications')
+        .get('/notifications')
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
@@ -101,7 +101,7 @@ describe('Notification Service Integration Tests', () => {
     });
   });
 
-  describe('PATCH /api/v1/notifications/:id/read', () => {
+  describe('PATCH /notifications/:id/read', () => {
     it('should mark notification as read successfully', async () => {
       const token = createAccessToken({ sub: 'user-123', role: Role.USER }, jwtSecret);
       
@@ -116,7 +116,7 @@ describe('Notification Service Integration Tests', () => {
       });
 
       const res = await request(app)
-        .patch(`/api/v1/notifications/${notif._id}/read`)
+        .patch(`/notifications/${notif._id}/read`)
         .set('Authorization', `Bearer ${token}`)
         .expect(200);
 
@@ -140,7 +140,7 @@ describe('Notification Service Integration Tests', () => {
       });
 
       await request(app)
-        .patch(`/api/v1/notifications/${notif._id}/read`)
+        .patch(`/notifications/${notif._id}/read`)
         .set('Authorization', `Bearer ${token}`)
         .expect(403);
 

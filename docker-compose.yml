@@ -123,6 +123,7 @@ services:
       MONGODB_URI: mongodb://admin:admin123@mongodb:27017/reports?authSource=admin
       REPORT_DB: reports
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars+}
     depends_on:
       mongodb:
         condition: service_healthy
@@ -143,6 +144,7 @@ services:
       MONGODB_URI: mongodb://admin:admin123@mongodb:27017/notifications?authSource=admin
       RABBITMQ_URL: amqp://admin:admin123@rabbitmq:5672
       RABBITMQ_EXCHANGE: inventory.events
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production-32chars+}
     depends_on:
       mongodb:
         condition: service_healthy
