@@ -68,6 +68,9 @@ The Inventory Management System is a distributed microservices application follo
 - Server state (TanStack Query)
 - Form handling (React Hook Form)
 - Routing (React Router)
+- Toast notifications (Sonner)
+
+**UI Component Library**: shadcn/ui built on Radix UI primitives + Tailwind CSS + CVA. All interactive elements (`Button`, `Input`, `Dialog`, `Select`, `Card`, `DropdownMenu`, `Toast`, etc.) use shadcn components for consistent accessible UI.
 
 **Database**: None (API-only)
 
@@ -100,13 +103,16 @@ The Inventory Management System is a distributed microservices application follo
 **Routing Rules**:
 
 ```
-POST   /auth/*              → auth-service
-GET    /products/*          → product-service
-GET/PUT/DELETE /inventory/* → inventory-service
-GET    /reports/*           → report-service
-GET    /notifications/*     → notification-service
-GET    /audit/*             → audit-service
-GET    /events              → sse-service
+/auth/*          → auth-service
+/users/*         → auth-service
+/products/*      → product-service
+/categories/*    → product-service
+/suppliers/*     → product-service
+/inventory/*     → inventory-service
+/reports/*       → report-service
+/notifications/* → notification-service
+/audit/*         → audit-service
+/events          → sse-service
 ```
 
 **Database**: None (API gateway only)
@@ -152,10 +158,16 @@ GET    /events              → sse-service
 - `POST /auth/login` - Authenticate, issue tokens
 - `POST /auth/refresh` - Rotate refresh token, issue new access token
 - `POST /auth/logout` - Blacklist refresh token, clear cookie
+- `GET /users` - List users (ADMIN only, paginated, searchable)
+- `GET /users/:id` - Get user by ID (ADMIN only)
+- `POST /users` - Create user (ADMIN only)
+- `PUT /users/:id` - Update user (ADMIN only)
+- `DELETE /users/:id` - Soft delete user (ADMIN only)
 
 **Events Emitted**:
 
-- `user.created` (after successful registration)
+- `user.created` (after successful registration or admin user creation)
+- `user.updated` (after user update)
 
 **Events Consumed**: None
 
@@ -175,6 +187,8 @@ GET    /events              → sse-service
 - Category management
 - Supplier management
 - Product search and filtering
+
+**Repository Interfaces**: `ICategoryRepository`, `ISupplierRepository`, `IProductRepository` — all data access behind typed interface contracts, enabling easy testing with mocks.
 
 **Collections**:
 
@@ -207,6 +221,18 @@ GET    /events              → sse-service
 - `POST /products` (ADMIN only, idempotency key required)
 - `PUT /products/:id` (ADMIN only)
 - `DELETE /products/:id` (ADMIN only, soft delete)
+
+- `GET /categories?page=1&limit=20&search=...`
+- `GET /categories/:id`
+- `POST /categories` (ADMIN only)
+- `PUT /categories/:id` (ADMIN only)
+- `DELETE /categories/:id` (ADMIN only, soft delete)
+
+- `GET /suppliers?page=1&limit=20&search=...`
+- `GET /suppliers/:id`
+- `POST /suppliers` (ADMIN only)
+- `PUT /suppliers/:id` (ADMIN only)
+- `DELETE /suppliers/:id` (ADMIN only, soft delete)
 
 **Events Emitted**:
 
@@ -801,6 +827,7 @@ req.correlationId = correlationId
 - Access token: 15-minute expiry
 - Refresh token: 7-day expiry, rotates, stored in HttpOnly cookie
 - No localStorage tokens (XSS protection)
+- `JWT_SECRET` is **required** in all services (gateway, auth-service, report-service, notification-service, sse-service) — no silent fallback. Mismatch causes 401 on all authenticated routes.
 
 ### Authorization
 
@@ -830,6 +857,7 @@ req.correlationId = correlationId
 - Gateway handles CORS
 - Configure allowed origins via `CORS_ORIGIN` env var
 - Credentials allowed (for cookies)
+- Allowed headers: `Content-Type`, `Authorization`, `X-Correlation-ID`, `Idempotency-Key`
 
 ---
 
@@ -870,7 +898,8 @@ Fail build if below thresholds.
 - Hook tests
 - Store tests (Zustand)
 - Form validation tests (React Hook Form + Zod)
-- MSW for API mocking
+- API hooks mocked via `jest.mock`
+- Path alias `@/` maps to `apps/frontend/src/` in `jest.config.js`
 
 ---
 

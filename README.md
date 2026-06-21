@@ -32,6 +32,8 @@ Monorepo for a distributed inventory management platform built with microservice
 - ReactJS
 - Vite
 - TailwindCSS
+- shadcn/ui (Radix UI primitives + CVA)
+- Sonner (toast notifications)
 - React Router
 - Axios
 - Zustand
@@ -40,7 +42,6 @@ Monorepo for a distributed inventory management platform built with microservice
 - Zod
 - Jest
 - React Testing Library
-- MSW
 
 ### Infrastructure
 
@@ -530,14 +531,16 @@ Common config:
 
 - `DATABASE_URL` - MongoDB connection string (per-service db)
 - `RABBITMQ_URL` - RabbitMQ connection string
-- `JWT_SECRET` - Auth token signing key
-- `JWT_REFRESH_SECRET` - Refresh token signing key
+- `JWT_SECRET` - Auth token signing key (**required** in all services — no fallback)
+- `JWT_REFRESH_SECRET` - Refresh token signing key (auth-service only)
 - `PORT` - Service port
 - `NODE_ENV` - `development` | `production`
 - `CORS_ORIGIN` - Allowed CORS origins
 - `RATE_LIMIT_WINDOW_MS` - Rate limit window (ms)
 - `RATE_LIMIT_MAX_REQUESTS` - Rate limit max requests
 - `CORRELATION_ID_HEADER` - Header name for correlation ID
+
+> `JWT_SECRET` must be identical across all services (gateway, auth-service, report-service, notification-service, sse-service). A mismatch causes 401 errors on authenticated routes even with a valid token.
 
 ## API Endpoints
 
@@ -551,29 +554,55 @@ Common config:
 
 ### Authenticated Endpoints (require Bearer token)
 
+**Users** (proxied to auth-service, ADMIN only)
+- `GET /users` - List users (paginated, searchable)
+- `GET /users/:id` - Get user details
+- `POST /users` - Create user
+- `PUT /users/:id` - Update user
+- `DELETE /users/:id` - Soft delete user
+
+**Products** (proxied to product-service)
 - `GET /products` - List products (paginated, searchable)
 - `GET /products/:id` - Get product details
 - `POST /products` - Create product (ADMIN only)
 - `PUT /products/:id` - Update product (ADMIN only)
 - `DELETE /products/:id` - Soft delete product (ADMIN only)
 
+**Categories** (proxied to product-service)
+- `GET /categories` - List categories (paginated, searchable)
+- `GET /categories/:id` - Get category details
+- `POST /categories` - Create category (ADMIN only)
+- `PUT /categories/:id` - Update category (ADMIN only)
+- `DELETE /categories/:id` - Soft delete category (ADMIN only)
+
+**Suppliers** (proxied to product-service)
+- `GET /suppliers` - List suppliers (paginated, searchable)
+- `GET /suppliers/:id` - Get supplier details
+- `POST /suppliers` - Create supplier (ADMIN only)
+- `PUT /suppliers/:id` - Update supplier (ADMIN only)
+- `DELETE /suppliers/:id` - Soft delete supplier (ADMIN only)
+
+**Inventory** (proxied to inventory-service)
 - `GET /inventory` - List inventory levels (ADMIN only)
 - `GET /inventory/:productId` - Get inventory for product
 - `POST /inventory/stock-in` - Record stock in (ADMIN only)
 - `POST /inventory/stock-out` - Record stock out (ADMIN only)
 - `POST /inventory/adjust` - Adjust stock (ADMIN only)
 
+**Reports** (proxied to report-service)
 - `GET /reports/dashboard` - Dashboard metrics (USER and above)
 - `GET /reports/sales` - Sales reports (ADMIN only)
 - `GET /reports/inventory-valuation` - Inventory valuation (ADMIN only)
 - `GET /reports/low-stock` - Low stock report (USER and above)
 
+**Notifications** (proxied to notification-service)
 - `GET /notifications` - List user notifications (authenticated)
 - `PATCH /notifications/:id/read` - Mark notification as read
 
-- `GET /audit` - List audit logs with filters (ADMIN only)
-- `GET /audit/:id` - Get audit log entry (ADMIN only)
-- `GET /audit/correlation/:correlationId` - Trace distributed transaction (ADMIN only)
+**Audit** (proxied to audit-service, ADMIN only)
+- `GET /audit` - List audit logs with filters
+- `GET /audit/:id` - Get audit log entry
+- `GET /audit/correlation/:correlationId` - Trace distributed transaction
 
 ### SSE Endpoints
 
