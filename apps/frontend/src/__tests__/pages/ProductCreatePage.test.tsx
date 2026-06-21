@@ -4,6 +4,11 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { ProductCreatePage } from '../../pages/ProductCreatePage'
 
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
+const mockToastError = toast.error as jest.Mock
+
 const mockNavigate = jest.fn()
 const mockCreateProduct = jest.fn()
 const mockUseCreateProduct = jest.fn()
@@ -29,6 +34,8 @@ describe('ProductCreatePage', () => {
   beforeEach(() => {
     mockNavigate.mockReset()
     mockCreateProduct.mockReset()
+    mockToastSuccess.mockReset()
+    mockToastError.mockReset()
     mockUseCreateProduct.mockReturnValue({ mutate: mockCreateProduct, isPending: false, isError: false, error: null })
   })
 
@@ -123,5 +130,31 @@ describe('ProductCreatePage', () => {
     mockUseCreateProduct.mockReturnValue({ mutate: mockCreateProduct, isPending: true, isError: false, error: null })
     renderPage()
     expect(screen.getByRole('button', { name: /creating/i })).toBeDisabled()
+  })
+
+  it('shows success toast on successful create', async () => {
+    mockCreateProduct.mockImplementation((_dto: unknown, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    await userEvent.type(screen.getByLabelText(/name/i), 'Widget')
+    await userEvent.type(screen.getByLabelText(/price/i), '9.99')
+    await userEvent.type(screen.getByLabelText(/sku/i), 'WGT-001')
+    await userEvent.type(screen.getByLabelText(/category/i), 'Electronics')
+    fireEvent.click(screen.getByRole('button', { name: /create/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('created'))
+    })
+  })
+
+  it('shows error toast when create fails', async () => {
+    mockCreateProduct.mockImplementation((_dto: unknown, opts: { onError?: (e: Error) => void }) => opts?.onError?.(new Error('Server error')))
+    renderPage()
+    await userEvent.type(screen.getByLabelText(/name/i), 'Widget')
+    await userEvent.type(screen.getByLabelText(/price/i), '9.99')
+    await userEvent.type(screen.getByLabelText(/sku/i), 'WGT-001')
+    await userEvent.type(screen.getByLabelText(/category/i), 'Electronics')
+    fireEvent.click(screen.getByRole('button', { name: /create/i }))
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalled()
+    })
   })
 })

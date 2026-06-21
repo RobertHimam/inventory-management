@@ -4,6 +4,11 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { CategoryEditPage } from '../../pages/CategoryEditPage'
 import { useCategory, useUpdateCategory } from '../../hooks/useCategories'
 
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
+const mockToastError = toast.error as jest.Mock
+
 const mockNavigate = jest.fn()
 const mockUpdateCategory = jest.fn()
 
@@ -42,6 +47,10 @@ function renderPage() {
 
 describe('CategoryEditPage', () => {
   beforeEach(() => {
+    mockNavigate.mockReset()
+    mockUpdateCategory.mockReset()
+    mockToastSuccess.mockReset()
+    mockToastError.mockReset()
     mockUseCategory.mockReturnValue(CATEGORY_RESULT)
     mockUseUpdateCategory.mockReturnValue({ mutate: mockUpdateCategory, isPending: false, isError: false, error: null })
   })
@@ -77,5 +86,23 @@ describe('CategoryEditPage', () => {
     renderPage()
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
     expect(mockNavigate).toHaveBeenCalledWith('/categories')
+  })
+
+  it('shows success toast on successful update', async () => {
+    mockUpdateCategory.mockImplementation((_args: unknown, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: /^update$/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('updated'))
+    })
+  })
+
+  it('shows error toast when update fails', async () => {
+    mockUpdateCategory.mockImplementation((_args: unknown, opts: { onError?: (e: Error) => void }) => opts?.onError?.(new Error('Server error')))
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: /^update$/i }))
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalled()
+    })
   })
 })

@@ -4,6 +4,11 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { StockOutPage } from '../../pages/StockOutPage'
 
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
+const mockToastError = toast.error as jest.Mock
+
 const mockNavigate = jest.fn()
 const mockStockOut = jest.fn()
 const mockUseStockOut = jest.fn()
@@ -29,6 +34,8 @@ describe('StockOutPage', () => {
   beforeEach(() => {
     mockNavigate.mockReset()
     mockStockOut.mockReset()
+    mockToastSuccess.mockReset()
+    mockToastError.mockReset()
     mockUseStockOut.mockReturnValue({ mutate: mockStockOut, isPending: false, isError: false, error: null })
   })
 
@@ -113,5 +120,27 @@ describe('StockOutPage', () => {
     mockUseStockOut.mockReturnValue({ mutate: mockStockOut, isPending: true, isError: false, error: null })
     renderPage()
     expect(screen.getByRole('button', { name: /submitting/i })).toBeDisabled()
+  })
+
+  it('shows success toast on successful submit', async () => {
+    mockStockOut.mockImplementation((_dto: unknown, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    await userEvent.type(screen.getByLabelText(/product id/i), 'prod-1')
+    await userEvent.type(screen.getByLabelText(/quantity/i), '5')
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('successfully'))
+    })
+  })
+
+  it('shows error toast when submit fails', async () => {
+    mockStockOut.mockImplementation((_dto: unknown, opts: { onError?: (e: Error) => void }) => opts?.onError?.(new Error('Server error')))
+    renderPage()
+    await userEvent.type(screen.getByLabelText(/product id/i), 'prod-1')
+    await userEvent.type(screen.getByLabelText(/quantity/i), '5')
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }))
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalled()
+    })
   })
 })

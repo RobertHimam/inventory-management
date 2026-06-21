@@ -3,6 +3,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ProductEditPage } from '../../pages/ProductEditPage'
 
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
+const mockToastError = toast.error as jest.Mock
+
 const mockNavigate = jest.fn()
 const mockUpdateProduct = jest.fn()
 const mockUseProduct = jest.fn()
@@ -47,6 +52,8 @@ describe('ProductEditPage', () => {
   beforeEach(() => {
     mockNavigate.mockReset()
     mockUpdateProduct.mockReset()
+    mockToastSuccess.mockReset()
+    mockToastError.mockReset()
     mockUseProduct.mockReturnValue({ data: { data: PRODUCT }, isLoading: false, isError: false })
     mockUseUpdateProduct.mockReturnValue({ mutate: mockUpdateProduct, isPending: false, isError: false, error: null })
   })
@@ -122,5 +129,23 @@ describe('ProductEditPage', () => {
     mockUseUpdateProduct.mockReturnValue({ mutate: mockUpdateProduct, isPending: true, isError: false, error: null })
     renderPage()
     expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled()
+  })
+
+  it('shows success toast on successful update', async () => {
+    mockUpdateProduct.mockImplementation((_args: unknown, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('updated'))
+    })
+  })
+
+  it('shows error toast when update fails', async () => {
+    mockUpdateProduct.mockImplementation((_args: unknown, opts: { onError?: (e: Error) => void }) => opts?.onError?.(new Error('Server error')))
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalled()
+    })
   })
 })

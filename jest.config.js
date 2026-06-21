@@ -41,6 +41,7 @@ module.exports = {
     '^@inventory/shared-rabbitmq/(.*)$': '<rootDir>/packages/shared-rabbitmq/src/$1',
     '^@inventory/shared-logger$': '<rootDir>/packages/shared-logger/src',
     '^@inventory/shared-logger/(.*)$': '<rootDir>/packages/shared-logger/src/$1',
+    '^@/(.*)$': '<rootDir>/apps/frontend/src/$1',
     '^@config/([^/]+)(.*)$': '<rootDir>/packages/$1/src/config$2',
     '^@utils/([^/]+)(.*)$': '<rootDir>/packages/$1/src/utils$2',
   },

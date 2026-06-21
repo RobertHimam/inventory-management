@@ -40,7 +40,7 @@ describe('LoginPage', () => {
   it('renders email and password fields and submit button', () => {
     renderLoginPage()
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
 
@@ -68,7 +68,7 @@ describe('LoginPage', () => {
     })
     renderLoginPage()
     await userEvent.type(screen.getByLabelText(/email/i), 'a@b.com')
-    await userEvent.type(screen.getByLabelText(/password/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/^password/i), 'password123')
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
     await waitFor(() => {
       expect(mockLoginApi).toHaveBeenCalledWith({ email: 'a@b.com', password: 'password123' })
@@ -80,7 +80,7 @@ describe('LoginPage', () => {
     mockLoginApi.mockResolvedValueOnce({ user, accessToken: 'tok' })
     renderLoginPage()
     await userEvent.type(screen.getByLabelText(/email/i), 'a@b.com')
-    await userEvent.type(screen.getByLabelText(/password/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/^password/i), 'password123')
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
     await waitFor(() => {
       expect(mockSetAuth).toHaveBeenCalledWith(user, 'tok')
@@ -96,7 +96,7 @@ describe('LoginPage', () => {
     mockLoginApi.mockRejectedValueOnce(axiosError)
     renderLoginPage()
     await userEvent.type(screen.getByLabelText(/email/i), 'a@b.com')
-    await userEvent.type(screen.getByLabelText(/password/i), 'wrong')
+    await userEvent.type(screen.getByLabelText(/^password/i), 'wrong')
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }))
     await waitFor(() => {
       expect(screen.getByRole('alert')).toBeInTheDocument()

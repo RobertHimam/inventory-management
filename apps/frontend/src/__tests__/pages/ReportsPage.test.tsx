@@ -102,10 +102,10 @@ describe('ReportsPage', () => {
 
     it('shows all 4 tabs for admin', () => {
       renderPage()
-      expect(screen.getByRole('button', { name: /overview/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /^sales$/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /inventory valuation/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /low stock/i })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: /overview/i })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: /^sales$/i })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: /valuation/i })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: /low stock/i })).toBeInTheDocument()
     })
 
     it('shows dashboard metrics on Overview tab by default', () => {
@@ -116,19 +116,19 @@ describe('ReportsPage', () => {
 
     it('shows sales report when Sales tab clicked', () => {
       renderPage()
-      fireEvent.click(screen.getByRole('button', { name: /^sales$/i }))
+      fireEvent.click(screen.getByRole('tab', { name: /^sales$/i }))
       expect(screen.getByText('Widget')).toBeInTheDocument()
     })
 
     it('shows valuation when Inventory Valuation tab clicked', () => {
       renderPage()
-      fireEvent.click(screen.getByRole('button', { name: /inventory valuation/i }))
+      fireEvent.click(screen.getByRole('tab', { name: /valuation/i }))
       expect(screen.getByText('WGT-001')).toBeInTheDocument()
     })
 
     it('shows low stock items when Low Stock tab clicked', () => {
       renderPage()
-      fireEvent.click(screen.getByRole('button', { name: /low stock/i }))
+      fireEvent.click(screen.getByRole('tab', { name: /low stock/i }))
       expect(screen.getByText('Gadget')).toBeInTheDocument()
     })
 
@@ -152,14 +152,14 @@ describe('ReportsPage', () => {
 
     it('hides Sales and Inventory Valuation tabs', () => {
       renderPage()
-      expect(screen.queryByRole('button', { name: /^sales$/i })).not.toBeInTheDocument()
-      expect(screen.queryByRole('button', { name: /inventory valuation/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('tab', { name: /^sales$/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('tab', { name: /valuation/i })).not.toBeInTheDocument()
     })
 
     it('shows Overview and Low Stock tabs', () => {
       renderPage()
-      expect(screen.getByRole('button', { name: /overview/i })).toBeInTheDocument()
-      expect(screen.getByRole('button', { name: /low stock/i })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: /overview/i })).toBeInTheDocument()
+      expect(screen.getByRole('tab', { name: /low stock/i })).toBeInTheDocument()
     })
   })
 })

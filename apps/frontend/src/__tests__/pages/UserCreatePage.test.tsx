@@ -4,6 +4,11 @@ import { MemoryRouter } from 'react-router-dom'
 import { UserCreatePage } from '../../pages/UserCreatePage'
 import { Role } from '@inventory/shared-types'
 
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
+const mockToastError = toast.error as jest.Mock
+
 const mockNavigate = jest.fn()
 const mockCreateUser = jest.fn()
 
@@ -25,6 +30,13 @@ function renderPage() {
 }
 
 describe('UserCreatePage', () => {
+  beforeEach(() => {
+    mockNavigate.mockReset()
+    mockCreateUser.mockReset()
+    mockToastSuccess.mockReset()
+    mockToastError.mockReset()
+  })
+
   it('renders Create User heading', () => {
     renderPage()
     expect(screen.getByRole('heading', { name: /create user/i })).toBeInTheDocument()
@@ -69,5 +81,29 @@ describe('UserCreatePage', () => {
     renderPage()
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
     expect(mockNavigate).toHaveBeenCalledWith('/users')
+  })
+
+  it('shows success toast on successful create', async () => {
+    mockCreateUser.mockImplementation((_dto: unknown, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'johndoe' } })
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'john@example.com' } })
+    fireEvent.change(screen.getByLabelText(/^password/i), { target: { value: 'secret123' } })
+    fireEvent.click(screen.getByRole('button', { name: /^create$/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('created'))
+    })
+  })
+
+  it('shows error toast when create fails', async () => {
+    mockCreateUser.mockImplementation((_dto: unknown, opts: { onError?: (e: Error) => void }) => opts?.onError?.(new Error('Server error')))
+    renderPage()
+    fireEvent.change(screen.getByLabelText(/username/i), { target: { value: 'johndoe' } })
+    fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'john@example.com' } })
+    fireEvent.change(screen.getByLabelText(/^password/i), { target: { value: 'secret123' } })
+    fireEvent.click(screen.getByRole('button', { name: /^create$/i }))
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalled()
+    })
   })
 })

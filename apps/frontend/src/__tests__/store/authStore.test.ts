@@ -11,6 +11,7 @@ const mockUser = {
 
 describe('authStore', () => {
   beforeEach(() => {
+    localStorage.clear()
     useAuthStore.getState().clearAuth()
   })
 
@@ -38,11 +39,31 @@ describe('authStore', () => {
     expect(isAuthenticated).toBe(false)
   })
 
-  it('never stores token in localStorage or sessionStorage', () => {
+  it('persists user to localStorage after setAuth', () => {
     useAuthStore.getState().setAuth(mockUser, 'secret-token')
-    expect(localStorage.getItem('accessToken')).toBeNull()
-    expect(sessionStorage.getItem('accessToken')).toBeNull()
-    expect(JSON.stringify(localStorage)).not.toContain('secret-token')
+    const stored = localStorage.getItem('auth-storage')
+    expect(stored).not.toBeNull()
+    const parsed = JSON.parse(stored!)
+    expect(parsed.state.user).toEqual(mockUser)
+  })
+
+  it('does not persist accessToken to localStorage', () => {
+    useAuthStore.getState().setAuth(mockUser, 'secret-token')
+    const stored = localStorage.getItem('auth-storage')
+    expect(stored).not.toBeNull()
+    const parsed = JSON.parse(stored!)
+    expect(parsed.state.accessToken).toBeUndefined()
+    expect(JSON.stringify(parsed)).not.toContain('secret-token')
+  })
+
+  it('clears user from localStorage after clearAuth', () => {
+    useAuthStore.getState().setAuth(mockUser, 'secret-token')
+    useAuthStore.getState().clearAuth()
+    const stored = localStorage.getItem('auth-storage')
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      expect(parsed.state?.user).toBeNull()
+    }
   })
 
   it('setAuth replaces previous auth state', () => {

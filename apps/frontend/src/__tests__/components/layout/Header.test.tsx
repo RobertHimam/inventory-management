@@ -48,13 +48,13 @@ describe('Header', () => {
 
   it('has a logout button', () => {
     renderHeader()
-    expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
   })
 
   it('logout clears auth state and navigates to /login', async () => {
     renderHeader()
-    fireEvent.click(screen.getByRole('button', { name: /logout/i }))
-    await screen.findByRole('button', { name: /logout/i })
+    fireEvent.click(screen.getByRole('button', { name: /sign out/i }))
+    await screen.findByRole('button', { name: /sign out/i })
     expect(useAuthStore.getState().isAuthenticated).toBe(false)
     expect(mockNavigate).toHaveBeenCalledWith('/login')
   })

@@ -7,6 +7,11 @@ import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
 import type { AuthUser } from '@inventory/shared-types'
 
+jest.mock('sonner', () => ({
+  Toaster: () => null,
+  toast: { success: jest.fn(), error: jest.fn() },
+}))
+
 jest.mock('../api/authApi', () => ({
   logoutApi: jest.fn().mockResolvedValue(undefined),
 }))

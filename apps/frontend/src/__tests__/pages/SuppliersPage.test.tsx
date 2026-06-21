@@ -1,8 +1,12 @@
 /** @jest-environment jsdom */
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { SuppliersPage } from '../../pages/SuppliersPage'
 import { Role } from '@inventory/shared-types'
+
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
 
 const mockNavigate = jest.fn()
 const mockUseSupplierList = jest.fn()
@@ -43,6 +47,8 @@ function renderPage() {
 
 describe('SuppliersPage', () => {
   beforeEach(() => {
+    mockDeleteSupplier.mockReset()
+    mockToastSuccess.mockReset()
     mockUseAuthStore.mockReturnValue({ user: { id: '1', username: 'admin', role: Role.ADMIN } })
     mockUseSupplierList.mockReturnValue({ data: { data: SUPPLIERS, pagination: PAGINATION }, isLoading: false, isError: false })
     mockUseDeleteSupplier.mockReturnValue({ mutate: mockDeleteSupplier })
@@ -105,7 +111,7 @@ describe('SuppliersPage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /confirm/i }))
-    expect(mockDeleteSupplier).toHaveBeenCalledWith('sup1')
+    expect(mockDeleteSupplier).toHaveBeenCalledWith('sup1', expect.any(Object))
   })
 
   it('cancels delete dialog', () => {
@@ -113,5 +119,15 @@ describe('SuppliersPage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('shows success toast after delete confirmed', async () => {
+    mockDeleteSupplier.mockImplementation((_id: string, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
+    fireEvent.click(screen.getByRole('button', { name: /confirm/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('deleted'))
+    })
   })
 })

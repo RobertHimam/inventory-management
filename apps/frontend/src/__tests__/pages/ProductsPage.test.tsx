@@ -1,8 +1,12 @@
 /** @jest-environment jsdom */
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { ProductsPage } from '../../pages/ProductsPage'
 import { Role } from '@inventory/shared-types'
+
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
 
 const mockNavigate = jest.fn()
 const mockDeleteProduct = jest.fn()
@@ -77,6 +81,7 @@ describe('ProductsPage', () => {
   beforeEach(() => {
     mockNavigate.mockReset()
     mockDeleteProduct.mockReset()
+    mockToastSuccess.mockReset()
     mockUseProductList.mockReturnValue({ data: { data: PRODUCTS, pagination: PAGINATION }, isLoading: false, isError: false })
     mockUseDeleteProduct.mockReturnValue({ mutate: mockDeleteProduct })
   })
@@ -178,7 +183,7 @@ describe('ProductsPage', () => {
     renderPage()
     fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
     fireEvent.click(screen.getByRole('button', { name: /confirm/i }))
-    expect(mockDeleteProduct).toHaveBeenCalledWith('p1')
+    expect(mockDeleteProduct).toHaveBeenCalledWith('p1', expect.any(Object))
   })
 
   it('dismisses dialog when Cancel clicked', () => {
@@ -207,5 +212,16 @@ describe('ProductsPage', () => {
     setupUser()
     renderPage()
     expect(screen.getByRole('button', { name: /next/i })).toBeDisabled()
+  })
+
+  it('shows success toast after delete confirmed', async () => {
+    setupAdmin()
+    mockDeleteProduct.mockImplementation((_id: string, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
+    fireEvent.click(screen.getByRole('button', { name: /confirm/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('deleted'))
+    })
   })
 })

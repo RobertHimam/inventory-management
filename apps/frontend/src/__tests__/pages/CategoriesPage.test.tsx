@@ -1,8 +1,12 @@
 /** @jest-environment jsdom */
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { CategoriesPage } from '../../pages/CategoriesPage'
 import { Role } from '@inventory/shared-types'
+
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
 
 const mockNavigate = jest.fn()
 const mockUseCategoryList = jest.fn()
@@ -43,6 +47,8 @@ function renderPage() {
 
 describe('CategoriesPage', () => {
   beforeEach(() => {
+    mockDeleteCategory.mockReset()
+    mockToastSuccess.mockReset()
     mockUseAuthStore.mockReturnValue({ user: { id: '1', username: 'admin', role: Role.ADMIN } })
     mockUseCategoryList.mockReturnValue({ data: { data: CATEGORIES, pagination: PAGINATION }, isLoading: false, isError: false })
     mockUseDeleteCategory.mockReturnValue({ mutate: mockDeleteCategory })
@@ -106,7 +112,7 @@ describe('CategoriesPage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /confirm/i }))
-    expect(mockDeleteCategory).toHaveBeenCalledWith('cat1')
+    expect(mockDeleteCategory).toHaveBeenCalledWith('cat1', expect.any(Object))
   })
 
   it('cancels delete dialog', () => {
@@ -114,5 +120,15 @@ describe('CategoriesPage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('shows success toast after delete confirmed', async () => {
+    mockDeleteCategory.mockImplementation((_id: string, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
+    fireEvent.click(screen.getByRole('button', { name: /confirm/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('deleted'))
+    })
   })
 })

@@ -1,8 +1,12 @@
 /** @jest-environment jsdom */
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { UsersPage } from '../../pages/UsersPage'
 import { Role } from '@inventory/shared-types'
+
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
 
 const mockNavigate = jest.fn()
 const mockUseUserList = jest.fn()
@@ -36,6 +40,8 @@ function renderPage() {
 
 describe('UsersPage', () => {
   beforeEach(() => {
+    mockDeleteUser.mockReset()
+    mockToastSuccess.mockReset()
     mockUseUserList.mockReturnValue({ data: { data: USERS, pagination: PAGINATION }, isLoading: false, isError: false })
     mockUseDeleteManagedUser.mockReturnValue({ mutate: mockDeleteUser })
   })
@@ -86,7 +92,7 @@ describe('UsersPage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /confirm/i }))
-    expect(mockDeleteUser).toHaveBeenCalledWith('u1')
+    expect(mockDeleteUser).toHaveBeenCalledWith('u1', expect.any(Object))
   })
 
   it('cancels delete dialog', () => {
@@ -94,5 +100,15 @@ describe('UsersPage', () => {
     fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('shows success toast after delete confirmed', async () => {
+    mockDeleteUser.mockImplementation((_id: string, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    fireEvent.click(screen.getAllByRole('button', { name: /delete/i })[0])
+    fireEvent.click(screen.getByRole('button', { name: /confirm/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('deleted'))
+    })
   })
 })

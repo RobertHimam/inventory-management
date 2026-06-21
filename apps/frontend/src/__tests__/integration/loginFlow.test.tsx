@@ -29,7 +29,7 @@ describe('LoginPage + authApi integration', () => {
   it('renders login form', () => {
     renderLoginPage()
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
 
@@ -45,7 +45,7 @@ describe('LoginPage + authApi integration', () => {
   it('shows validation error for invalid email', async () => {
     renderLoginPage()
     await userEvent.type(screen.getByLabelText(/email/i), 'not-valid')
-    await userEvent.type(screen.getByLabelText(/password/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/^password/i), 'password123')
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
     await waitFor(() => {
       expect(screen.getByText(/invalid email/i)).toBeInTheDocument()
@@ -57,7 +57,7 @@ describe('LoginPage + authApi integration', () => {
     renderLoginPage()
 
     await userEvent.type(screen.getByLabelText(/email/i), 'admin@example.com')
-    await userEvent.type(screen.getByLabelText(/password/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/^password/i), 'password123')
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => expect(useAuthStore.getState().isAuthenticated).toBe(true))
@@ -74,7 +74,7 @@ describe('LoginPage + authApi integration', () => {
 
     renderLoginPage()
     await userEvent.type(screen.getByLabelText(/email/i), 'admin@example.com')
-    await userEvent.type(screen.getByLabelText(/password/i), 'wrongpass')
+    await userEvent.type(screen.getByLabelText(/^password/i), 'wrongpass')
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
@@ -93,7 +93,7 @@ describe('LoginPage + authApi integration', () => {
 
     renderLoginPage()
     await userEvent.type(screen.getByLabelText(/email/i), 'admin@example.com')
-    await userEvent.type(screen.getByLabelText(/password/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/^password/i), 'password123')
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {
@@ -107,7 +107,7 @@ describe('LoginPage + authApi integration', () => {
     renderLoginPage()
 
     await userEvent.type(screen.getByLabelText(/email/i), 'admin@example.com')
-    await userEvent.type(screen.getByLabelText(/password/i), 'password123')
+    await userEvent.type(screen.getByLabelText(/^password/i), 'password123')
     await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
 
     await waitFor(() => {

@@ -4,6 +4,11 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { SupplierEditPage } from '../../pages/SupplierEditPage'
 import { useSupplier, useUpdateSupplier } from '../../hooks/useSuppliers'
 
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
+const mockToastError = toast.error as jest.Mock
+
 const mockNavigate = jest.fn()
 const mockUpdateSupplier = jest.fn()
 
@@ -44,6 +49,10 @@ function renderPage() {
 
 describe('SupplierEditPage', () => {
   beforeEach(() => {
+    mockNavigate.mockReset()
+    mockUpdateSupplier.mockReset()
+    mockToastSuccess.mockReset()
+    mockToastError.mockReset()
     mockUseSupplier.mockReturnValue(SUPPLIER_RESULT)
     mockUseUpdateSupplier.mockReturnValue({ mutate: mockUpdateSupplier, isPending: false, isError: false, error: null })
   })
@@ -79,5 +88,23 @@ describe('SupplierEditPage', () => {
     renderPage()
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
     expect(mockNavigate).toHaveBeenCalledWith('/suppliers')
+  })
+
+  it('shows success toast on successful update', async () => {
+    mockUpdateSupplier.mockImplementation((_args: unknown, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: /^update$/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('updated'))
+    })
+  })
+
+  it('shows error toast when update fails', async () => {
+    mockUpdateSupplier.mockImplementation((_args: unknown, opts: { onError?: (e: Error) => void }) => opts?.onError?.(new Error('Server error')))
+    renderPage()
+    fireEvent.click(screen.getByRole('button', { name: /^update$/i }))
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalled()
+    })
   })
 })

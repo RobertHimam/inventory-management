@@ -4,6 +4,11 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { StockAdjustmentPage } from '../../pages/StockAdjustmentPage'
 
+jest.mock('sonner', () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
+import { toast } from 'sonner'
+const mockToastSuccess = toast.success as jest.Mock
+const mockToastError = toast.error as jest.Mock
+
 const mockNavigate = jest.fn()
 const mockStockAdjust = jest.fn()
 const mockUseStockAdjust = jest.fn()
@@ -29,6 +34,8 @@ describe('StockAdjustmentPage', () => {
   beforeEach(() => {
     mockNavigate.mockReset()
     mockStockAdjust.mockReset()
+    mockToastSuccess.mockReset()
+    mockToastError.mockReset()
     mockUseStockAdjust.mockReturnValue({ mutate: mockStockAdjust, isPending: false, isError: false, error: null })
   })
 
@@ -135,5 +142,31 @@ describe('StockAdjustmentPage', () => {
     mockUseStockAdjust.mockReturnValue({ mutate: mockStockAdjust, isPending: true, isError: false, error: null })
     renderPage()
     expect(screen.getByRole('button', { name: /submitting/i })).toBeDisabled()
+  })
+
+  it('shows success toast on successful submit', async () => {
+    mockStockAdjust.mockImplementation((_dto: unknown, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
+    renderPage()
+    await userEvent.type(screen.getByLabelText(/product id/i), 'prod-1')
+    await userEvent.clear(screen.getByLabelText(/quantity/i))
+    await userEvent.type(screen.getByLabelText(/quantity/i), '5')
+    await userEvent.type(screen.getByLabelText(/reason/i), 'Test reason')
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }))
+    await waitFor(() => {
+      expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('successfully'))
+    })
+  })
+
+  it('shows error toast when submit fails', async () => {
+    mockStockAdjust.mockImplementation((_dto: unknown, opts: { onError?: (e: Error) => void }) => opts?.onError?.(new Error('Server error')))
+    renderPage()
+    await userEvent.type(screen.getByLabelText(/product id/i), 'prod-1')
+    await userEvent.clear(screen.getByLabelText(/quantity/i))
+    await userEvent.type(screen.getByLabelText(/quantity/i), '5')
+    await userEvent.type(screen.getByLabelText(/reason/i), 'Test reason')
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }))
+    await waitFor(() => {
+      expect(mockToastError).toHaveBeenCalled()
+    })
   })
 })
