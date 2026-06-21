@@ -1,3 +1,4 @@
+import { SortOrder } from 'mongoose';
 import { IProductRepository, FindAllOptions, FindAllResult } from './interfaces/IProductRepository';
 import { IProduct } from '../models/product.model';
 import Product from '../models/product.model';
@@ -33,8 +34,8 @@ export class ProductRepository implements IProductRepository {
       ];
     }
 
-    const sortOrder = order === 'asc' ? 1 : -1;
-    const sortOptions: Record<string, number> = { [sort]: sortOrder };
+    const sortOrder: SortOrder = order === 'asc' ? 1 : -1;
+    const sortOptions: Record<string, SortOrder> = { [sort]: sortOrder };
 
     const skip = (page - 1) * limit;
 

@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
+import { Role } from '@inventory/shared-types';
 import { ProductService } from '../services/ProductService';
 import { CreateProductDto, UpdateProductDto } from '../validation/product.validation';
 import { ConflictError, ValidationError, NotFoundError } from '../errors';
 
 interface ExtendedRequest<P = Record<string, string>, B = unknown, Q = Record<string, string | undefined>> extends Request<P, unknown, B, Q> {
-  user?: { userId: string; username?: string; role: string };
+  user?: { userId: string; username?: string; role: Role };
   correlationId?: string;
 }
 

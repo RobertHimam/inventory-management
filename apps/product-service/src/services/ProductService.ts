@@ -12,7 +12,7 @@ import { AuditAction, Role } from '@inventory/shared-types';
 interface ServiceUser {
   userId: string;
   username?: string;
-  role: Role | string;
+  role: Role;
 }
 
 interface ListProductsResult {
@@ -79,7 +79,7 @@ export class ProductService {
             auditId: randomUUID(),
             correlationId: cid,
             userId: user.userId,
-            username: user.username,
+            username: user.username ?? user.userId,
             role: user.role,
             action: AuditAction.CREATE,
             resourceType: 'Product',
@@ -165,7 +165,7 @@ export class ProductService {
             auditId: randomUUID(),
             correlationId: cid,
             userId: user.userId,
-            username: user.username,
+            username: user.username ?? user.userId,
             role: user.role,
             action: AuditAction.UPDATE,
             resourceType: 'Product',
@@ -227,7 +227,7 @@ export class ProductService {
             auditId: randomUUID(),
             correlationId: cid,
             userId: user.userId,
-            username: user.username,
+            username: user.username ?? user.userId,
             role: user.role,
             action: AuditAction.DELETE,
             resourceType: 'Product',
