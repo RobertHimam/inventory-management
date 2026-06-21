@@ -1,19 +1,12 @@
-import Category, { ICategory } from '../models/category.model';
+import Category from '../models/category.model';
+import {
+  ICategoryRepository,
+  CategoryFindAllOptions,
+  CategoryFindAllResult,
+} from './interfaces/ICategoryRepository';
+import { ICategory } from '../models/category.model';
 
-export interface CategoryFindAllOptions {
-  page?: number;
-  limit?: number;
-  search?: string;
-  sort?: string;
-  order?: 'asc' | 'desc';
-}
-
-export interface CategoryFindAllResult {
-  data: ICategory[];
-  total: number;
-}
-
-export class CategoryRepository {
+export class CategoryRepository implements ICategoryRepository {
   async create(data: Pick<ICategory, 'name' | 'description'>): Promise<ICategory> {
     return Category.create(data);
   }

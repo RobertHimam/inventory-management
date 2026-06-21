@@ -1,19 +1,12 @@
-import Supplier, { ISupplier } from '../models/supplier.model';
+import Supplier from '../models/supplier.model';
+import {
+  ISupplierRepository,
+  SupplierFindAllOptions,
+  SupplierFindAllResult,
+} from './interfaces/ISupplierRepository';
+import { ISupplier } from '../models/supplier.model';
 
-export interface SupplierFindAllOptions {
-  page?: number;
-  limit?: number;
-  search?: string;
-  sort?: string;
-  order?: 'asc' | 'desc';
-}
-
-export interface SupplierFindAllResult {
-  data: ISupplier[];
-  total: number;
-}
-
-export class SupplierRepository {
+export class SupplierRepository implements ISupplierRepository {
   async create(data: Pick<ISupplier, 'name' | 'contactEmail' | 'phone' | 'address'>): Promise<ISupplier> {
     return Supplier.create(data);
   }

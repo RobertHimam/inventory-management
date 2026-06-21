@@ -1,4 +1,5 @@
-import { SupplierRepository, SupplierFindAllOptions } from '../repositories/SupplierRepository';
+import { SupplierRepository } from '../repositories/SupplierRepository';
+import { SupplierFindAllOptions } from '../repositories/interfaces/ISupplierRepository';
 import { ConflictError, NotFoundError, ValidationError } from '../errors';
 import { z } from 'zod';
 

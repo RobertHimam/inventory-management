@@ -1,4 +1,5 @@
-import { CategoryRepository, CategoryFindAllOptions } from '../repositories/CategoryRepository';
+import { CategoryRepository } from '../repositories/CategoryRepository';
+import { CategoryFindAllOptions } from '../repositories/interfaces/ICategoryRepository';
 import { ConflictError, NotFoundError, ValidationError } from '../errors';
 import { z } from 'zod';
 
