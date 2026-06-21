@@ -90,20 +90,22 @@ export function createApp(notificationService: NotificationService, jwtSecret: s
    *       500:
    *         description: Server error
    */
-  app.get('/notifications', auth, async (req: Request, res: Response, next: NextFunction) => {
+  async function listNotifications(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const user = (req as Request & { user?: { userId: string } }).user;
       if (!user) {
         res.status(401).json({ success: false, error: 'Not authenticated' });
         return;
       }
-      
       const list = await notificationService.getNotificationsForUser(user.userId);
       res.status(200).json({ success: true, data: list });
     } catch (err) {
       next(err);
     }
-  });
+  }
+
+  app.get('/notifications', auth, listNotifications);
+  app.get('/notifications/api/v1/notifications', auth, listNotifications);
 
   /**
    * @swagger
@@ -144,14 +146,13 @@ export function createApp(notificationService: NotificationService, jwtSecret: s
    *       500:
    *         description: Server error
    */
-  app.patch('/notifications/:id/read', auth, async (req: Request, res: Response, next: NextFunction) => {
+  async function markNotificationRead(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const user = (req as Request & { user?: { userId: string } }).user;
       if (!user) {
         res.status(401).json({ success: false, error: 'Not authenticated' });
         return;
       }
-
       const { id } = req.params;
       const updated = await notificationService.markAsRead(id, user.userId);
       res.status(200).json({ success: true, data: updated });
@@ -165,7 +166,10 @@ export function createApp(notificationService: NotificationService, jwtSecret: s
         next(err);
       }
     }
-  });
+  }
+
+  app.patch('/notifications/:id/read', auth, markNotificationRead);
+  app.patch('/notifications/api/v1/notifications/:id/read', auth, markNotificationRead);
 
   // Error handler
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

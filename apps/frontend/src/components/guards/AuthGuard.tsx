@@ -25,7 +25,7 @@ export function AuthGuard({ children }: AuthGuardProps) {
       .finally(() => {
         setIsInitializing(false)
       })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, []) // intentional: run once on mount only
 
   if (isInitializing) return null
   if (!isAuthenticated) return <Navigate to="/login" replace />

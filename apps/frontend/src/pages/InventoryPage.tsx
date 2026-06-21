@@ -4,7 +4,10 @@ import { useInventoryList } from '../hooks/useInventory'
 import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
 import { Button } from '@/components/ui/button'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { SecondaryButton } from '@/components/ui/SecondaryButton'
 import { Input } from '@/components/ui/input'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 const LIMIT = 10
 
@@ -40,15 +43,15 @@ export function InventoryPage() {
         <h1 className="text-2xl font-bold text-gray-900">Inventory</h1>
         {isAdmin && (
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => navigate('/inventory/stock-in')}>
+            <PrimaryButton onClick={() => navigate('/inventory/stock-in')}>
               Stock In
-            </Button>
+            </PrimaryButton>
             <Button variant="destructive" onClick={() => navigate('/inventory/stock-out')}>
               Stock Out
             </Button>
-            <Button variant="outline" onClick={() => navigate('/inventory/adjustment')}>
+            <SecondaryButton onClick={() => navigate('/inventory/adjustment')}>
               Adjust
-            </Button>
+            </SecondaryButton>
           </div>
         )}
       </div>
@@ -74,53 +77,43 @@ export function InventoryPage() {
       )}
 
       {!isLoading && !isError && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200" aria-label="Inventory">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product Name</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reorder Level</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Updated</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {items.map((item) => (
-                <tr key={item.productId}>
-                  <td className="px-4 py-3 text-sm text-gray-900">{item.productName ?? item.productId}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{item.sku ?? '—'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{item.quantity}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{item.reorderLevel ?? '—'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">
-                    {new Date(item.updatedAt).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table aria-label="Inventory">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Product Name</TableHead>
+              <TableHead>SKU</TableHead>
+              <TableHead>Quantity</TableHead>
+              <TableHead>Reorder Level</TableHead>
+              <TableHead>Last Updated</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {items.map((item) => (
+              <TableRow key={item.productId}>
+                <TableCell>{item.productName ?? item.productId}</TableCell>
+                <TableCell className="text-muted-foreground">{item.sku ?? '—'}</TableCell>
+                <TableCell>{item.quantity}</TableCell>
+                <TableCell className="text-muted-foreground">{item.reorderLevel ?? '—'}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {new Date(item.updatedAt).toLocaleDateString()}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {pagination && (
         <div className="flex items-center justify-between mt-4">
-          <Button
-            variant="outline"
-            onClick={() => setPage((p) => p - 1)}
-            disabled={page <= 1}
-          >
+          <SecondaryButton size="sm" onClick={() => setPage((p) => p - 1)} disabled={page <= 1}>
             Previous
-          </Button>
+          </SecondaryButton>
           <span className="text-sm text-gray-600">
             Page {page} of {pagination.totalPages}
           </span>
-          <Button
-            variant="outline"
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page >= pagination.totalPages}
-          >
+          <SecondaryButton size="sm" onClick={() => setPage((p) => p + 1)} disabled={page >= pagination.totalPages}>
             Next
-          </Button>
+          </SecondaryButton>
         </div>
       )}
     </div>

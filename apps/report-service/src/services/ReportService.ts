@@ -8,36 +8,28 @@ export class ReportService {
 
   // EVENT HANDLERS
   async handleProductCreated(payload: unknown): Promise<void> {
-    const { product } = payload as { product: { id: string; name: string; sku: string; price: number; cost: number; reorderLevel: number } };
-    this.logger.info('Handling product.created in ReportService', { productId: product.id });
+    const p = payload as { productId: string; name: string; sku: string; price: number; stockQuantity?: number };
+    this.logger.info('Handling product.created in ReportService', { productId: p.productId });
     await ProductModel.findOneAndUpdate(
-      { productId: product.id },
+      { productId: p.productId },
       {
-        productId: product.id,
-        name: product.name,
-        sku: product.sku,
-        price: product.price,
-        cost: product.cost,
-        reorderLevel: product.reorderLevel,
-        deletedAt: null,
+        $set: { name: p.name, sku: p.sku, price: p.price, deletedAt: null },
+        $setOnInsert: { quantity: p.stockQuantity ?? 0 },
       },
       { upsert: true, new: true }
     );
+    await this.invalidateCache('dashboard');
   }
 
   async handleProductUpdated(payload: unknown): Promise<void> {
-    const { product } = payload as { product: { id: string; name: string; sku: string; price: number; cost: number; reorderLevel: number } };
-    this.logger.info('Handling product.updated in ReportService', { productId: product.id });
-    await ProductModel.findOneAndUpdate(
-      { productId: product.id },
-      {
-        name: product.name,
-        sku: product.sku,
-        price: product.price,
-        cost: product.cost,
-        reorderLevel: product.reorderLevel,
-      }
-    );
+    const p = payload as { productId: string; name?: string; sku?: string; price?: number };
+    this.logger.info('Handling product.updated in ReportService', { productId: p.productId });
+    const updates: Record<string, unknown> = {};
+    if (p.name !== undefined) updates.name = p.name;
+    if (p.sku !== undefined) updates.sku = p.sku;
+    if (p.price !== undefined) updates.price = p.price;
+    await ProductModel.findOneAndUpdate({ productId: p.productId }, { $set: updates });
+    await this.invalidateCache('dashboard|inventory-valuation');
   }
 
   async handleProductDeleted(payload: unknown): Promise<void> {
@@ -47,6 +39,7 @@ export class ReportService {
       { productId },
       { deletedAt: new Date() }
     );
+    await this.invalidateCache('dashboard|inventory-valuation');
   }
 
   async handleStockIn(payload: unknown): Promise<void> {
@@ -61,7 +54,7 @@ export class ReportService {
   }
 
   async handleStockOut(payload: unknown): Promise<void> {
-    const { productId, quantity, userId, createdAt } = payload as { productId: string; quantity: number; userId: string; createdAt?: Date };
+    const { productId, quantity, userId, createdAt } = payload as { productId: string; quantity: number; userId?: string; createdAt?: Date };
     this.logger.info('Handling stock.out.created in ReportService', { productId, quantity });
     
     // Find product to get price
@@ -94,7 +87,7 @@ export class ReportService {
     this.logger.info('Handling stock.adjustment.created in ReportService', { productId, newQuantity });
     await ProductModel.findOneAndUpdate(
       { productId },
-      { quantity: newQuantity }
+      { $set: { quantity: newQuantity } }
     );
     // Invalidate all caches
     await this.invalidateAllCaches();

@@ -4,11 +4,12 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { correlationMiddleware } from './middleware/correlation.middleware';
 import { errorMiddleware } from './middleware/error.middleware';
-import inventoryRoutes from './routes/inventory.routes';
+import createInventoryRouter from './routes/inventory.routes';
 import healthRoutes from './routes/health.routes';
 import { swaggerDefinition } from './swagger/docs';
+import { EventBus } from '@inventory/shared-rabbitmq';
 
-export const createApp = (): Application => {
+export const createApp = (eventBus: EventBus): Application => {
   const app = express();
 
   // Middleware
@@ -24,7 +25,7 @@ export const createApp = (): Application => {
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
   // Routes
-  app.use('/inventory', inventoryRoutes);
+  app.use('/inventory', createInventoryRouter(eventBus));
   app.use('/', healthRoutes);
 
   // Error handling

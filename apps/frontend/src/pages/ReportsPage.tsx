@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
 import { useDashboardMetrics, useSalesReport, useInventoryValuation, useLowStockReport } from '../hooks/useReports'
-import { Button } from '@/components/ui/button'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { SecondaryButton } from '@/components/ui/SecondaryButton'
 import { Input } from '@/components/ui/input'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 type Tab = 'dashboard' | 'sales' | 'valuation' | 'low-stock'
 
@@ -88,13 +90,13 @@ function SalesTab() {
             className="w-auto"
           />
         </div>
-        <Button onClick={handleFilter}>
+        <PrimaryButton onClick={handleFilter}>
           Apply Filter
-        </Button>
+        </PrimaryButton>
         {(startDate || endDate) && (
-          <Button variant="outline" onClick={handleClear}>
+          <SecondaryButton onClick={handleClear}>
             Clear
-          </Button>
+          </SecondaryButton>
         )}
       </div>
 
@@ -114,36 +116,34 @@ function SalesTab() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Product</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Qty</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Unit Price</th>
-                  <th className="px-4 py-3 text-right font-medium text-gray-500">Total</th>
-                  <th className="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {report.sales.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-gray-500">No sales records found.</td>
-                  </tr>
-                ) : (
-                  report.sales.map((sale, i) => (
-                    <tr key={i} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">{sale.productName}</td>
-                      <td className="px-4 py-3 text-right">{sale.quantity}</td>
-                      <td className="px-4 py-3 text-right">{formatCurrency(sale.price)}</td>
-                      <td className="px-4 py-3 text-right font-medium">{formatCurrency(sale.totalAmount)}</td>
-                      <td className="px-4 py-3 text-gray-500">{new Date(sale.createdAt).toLocaleDateString()}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table className="rounded-lg border border-gray-200 shadow-sm">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Product</TableHead>
+                <TableHead className="text-right">Qty</TableHead>
+                <TableHead className="text-right">Unit Price</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead>Date</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {report.sales.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">No sales records found.</TableCell>
+                </TableRow>
+              ) : (
+                report.sales.map((sale, i) => (
+                  <TableRow key={i}>
+                    <TableCell>{sale.productName}</TableCell>
+                    <TableCell className="text-right">{sale.quantity}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(sale.price)}</TableCell>
+                    <TableCell className="text-right font-medium">{formatCurrency(sale.totalAmount)}</TableCell>
+                    <TableCell className="text-muted-foreground">{new Date(sale.createdAt).toLocaleDateString()}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </>
       )}
     </div>
@@ -171,40 +171,38 @@ function ValuationTab() {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">Product</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-500">SKU</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Qty</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Cost</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Price</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Cost Val.</th>
-              <th className="px-4 py-3 text-right font-medium text-gray-500">Retail Val.</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {!report?.valuations?.length ? (
-              <tr>
-                <td colSpan={7} className="px-4 py-6 text-center text-gray-500">No inventory data found.</td>
-              </tr>
-            ) : (
-              report.valuations.map((item) => (
-                <tr key={item.productId} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium">{item.name}</td>
-                  <td className="px-4 py-3 text-gray-500">{item.sku}</td>
-                  <td className="px-4 py-3 text-right">{item.quantity}</td>
-                  <td className="px-4 py-3 text-right">{formatCurrency(item.cost)}</td>
-                  <td className="px-4 py-3 text-right">{formatCurrency(item.price)}</td>
-                  <td className="px-4 py-3 text-right">{formatCurrency(item.costValuation)}</td>
-                  <td className="px-4 py-3 text-right font-medium">{formatCurrency(item.retailValuation)}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      <Table className="rounded-lg border border-gray-200 shadow-sm">
+        <TableHeader>
+          <TableRow>
+            <TableHead>Product</TableHead>
+            <TableHead>SKU</TableHead>
+            <TableHead className="text-right">Qty</TableHead>
+            <TableHead className="text-right">Cost</TableHead>
+            <TableHead className="text-right">Price</TableHead>
+            <TableHead className="text-right">Cost Val.</TableHead>
+            <TableHead className="text-right">Retail Val.</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {!report?.valuations?.length ? (
+            <TableRow>
+              <TableCell colSpan={7} className="py-6 text-center text-muted-foreground">No inventory data found.</TableCell>
+            </TableRow>
+          ) : (
+            report.valuations.map((item) => (
+              <TableRow key={item.productId}>
+                <TableCell className="font-medium">{item.name}</TableCell>
+                <TableCell className="text-muted-foreground">{item.sku}</TableCell>
+                <TableCell className="text-right">{item.quantity}</TableCell>
+                <TableCell className="text-right">{formatCurrency(item.cost)}</TableCell>
+                <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                <TableCell className="text-right">{formatCurrency(item.costValuation)}</TableCell>
+                <TableCell className="text-right font-medium">{formatCurrency(item.retailValuation)}</TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   )
 }
@@ -218,36 +216,34 @@ function LowStockTab() {
   const items = data?.data?.lowStockItems ?? []
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-gray-50 border-b border-gray-200">
-          <tr>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">Product</th>
-            <th className="px-4 py-3 text-left font-medium text-gray-500">SKU</th>
-            <th className="px-4 py-3 text-right font-medium text-gray-500">Current Qty</th>
-            <th className="px-4 py-3 text-right font-medium text-gray-500">Reorder Level</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {items.length === 0 ? (
-            <tr>
-              <td colSpan={4} className="px-4 py-6 text-center text-gray-500">No low stock items.</td>
-            </tr>
-          ) : (
-            items.map((item) => (
-              <tr key={item.productId} className="hover:bg-gray-50">
-                <td className="px-4 py-3 font-medium">{item.name}</td>
-                <td className="px-4 py-3 text-gray-500">{item.sku}</td>
-                <td className="px-4 py-3 text-right">
-                  <span className="font-medium text-red-600">{item.quantity}</span>
-                </td>
-                <td className="px-4 py-3 text-right text-gray-500">{item.reorderLevel}</td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
+    <Table className="rounded-lg border border-gray-200 shadow-sm">
+      <TableHeader>
+        <TableRow>
+          <TableHead>Product</TableHead>
+          <TableHead>SKU</TableHead>
+          <TableHead className="text-right">Current Qty</TableHead>
+          <TableHead className="text-right">Reorder Level</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {items.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={4} className="py-6 text-center text-muted-foreground">No low stock items.</TableCell>
+          </TableRow>
+        ) : (
+          items.map((item) => (
+            <TableRow key={item.productId}>
+              <TableCell className="font-medium">{item.name}</TableCell>
+              <TableCell className="text-muted-foreground">{item.sku}</TableCell>
+              <TableCell className="text-right">
+                <span className="font-medium text-red-600">{item.quantity}</span>
+              </TableCell>
+              <TableCell className="text-right text-muted-foreground">{item.reorderLevel}</TableCell>
+            </TableRow>
+          ))
+        )}
+      </TableBody>
+    </Table>
   )
 }
 

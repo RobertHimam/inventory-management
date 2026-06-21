@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useUserList, useDeleteManagedUser } from '../hooks/useUserManagement'
+import { Button } from '@/components/ui/button'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { SecondaryButton } from '@/components/ui/SecondaryButton'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 const LIMIT = 10
 
@@ -46,12 +50,9 @@ export function UsersPage() {
     <div className="p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-y-3 mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-        <button
-          onClick={() => navigate('/users/new')}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
-        >
+        <PrimaryButton onClick={() => navigate('/users/new')}>
           Add User
-        </button>
+        </PrimaryButton>
       </div>
 
       <div className="mb-4">
@@ -75,60 +76,47 @@ export function UsersPage() {
       )}
 
       {!isLoading && !isError && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200" aria-label="Users">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-4 py-3 text-sm text-gray-900">{user.username}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{user.email}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    <button
-                      onClick={() => setDeleteId(user.id)}
-                      className="text-red-600 hover:text-red-800 font-medium"
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table aria-label="Users">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Username</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {users.map((user) => (
+              <TableRow key={user.id}>
+                <TableCell>{user.username}</TableCell>
+                <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                <TableCell>
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {user.role}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => setDeleteId(user.id)}>
+                    Delete
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {pagination && (
         <div className="flex items-center justify-between mt-4">
-          <button
-            onClick={() => setPage((p) => p - 1)}
-            disabled={page <= 1}
-            className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-40"
-          >
+          <SecondaryButton size="sm" onClick={() => setPage((p) => p - 1)} disabled={page <= 1}>
             Previous
-          </button>
+          </SecondaryButton>
           <span className="text-sm text-gray-600">
             Page {page} of {pagination.totalPages}
           </span>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page >= pagination.totalPages}
-            className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-40"
-          >
+          <SecondaryButton size="sm" onClick={() => setPage((p) => p + 1)} disabled={page >= pagination.totalPages}>
             Next
-          </button>
+          </SecondaryButton>
         </div>
       )}
 
@@ -141,18 +129,12 @@ export function UsersPage() {
           <div className="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full">
             <p className="text-gray-800 mb-4">Are you sure you want to delete this user?</p>
             <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="px-4 py-2 border border-gray-300 rounded text-sm"
-              >
+              <SecondaryButton onClick={() => setDeleteId(null)}>
                 Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-              >
+              </SecondaryButton>
+              <Button variant="destructive" onClick={handleConfirmDelete}>
                 Confirm
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -41,6 +41,7 @@ const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) return
   const timeout = setTimeout(() => {
     toastTimeouts.delete(toastId)
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
     dispatch({ type: 'REMOVE_TOAST', toastId })
   }, TOAST_REMOVE_DELAY)
   toastTimeouts.set(toastId, timeout)

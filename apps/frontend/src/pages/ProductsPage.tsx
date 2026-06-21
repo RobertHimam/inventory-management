@@ -4,6 +4,10 @@ import { toast } from 'sonner'
 import { useProductList, useDeleteProduct } from '../hooks/useProducts'
 import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
+import { Button } from '@/components/ui/button'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { SecondaryButton } from '@/components/ui/SecondaryButton'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 const LIMIT = 10
 
@@ -51,12 +55,9 @@ export function ProductsPage() {
       <div className="flex flex-wrap items-center justify-between gap-y-3 mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Products</h1>
         {isAdmin && (
-          <button
-            onClick={() => navigate('/products/new')}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
-          >
+          <PrimaryButton onClick={() => navigate('/products/new')}>
             Add Product
-          </button>
+          </PrimaryButton>
         )}
       </div>
 
@@ -81,80 +82,62 @@ export function ProductsPage() {
       )}
 
       {!isLoading && !isError && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200" aria-label="Products">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Stock</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+        <Table aria-label="Products">
+          <TableHeader>
+            <TableRow>
+              <TableHead>SKU</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Price</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Status</TableHead>
+              {isAdmin && <TableHead>Actions</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {products.map((product) => (
+              <TableRow key={product._id}>
+                <TableCell>{product.sku}</TableCell>
+                <TableCell>{product.name}</TableCell>
+                <TableCell className="text-muted-foreground">{product.category}</TableCell>
+                <TableCell>${product.price.toFixed(2)}</TableCell>
+                <TableCell>{product.stockQuantity}</TableCell>
+                <TableCell>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      product.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {product.isActive ? 'Active' : 'Inactive'}
+                  </span>
+                </TableCell>
                 {isAdmin && (
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <TableCell className="space-x-1">
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/products/${product._id}/edit`)}>
+                      Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => setDeleteId(product._id)}>
+                      Delete
+                    </Button>
+                  </TableCell>
                 )}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {products.map((product) => (
-                <tr key={product._id}>
-                  <td className="px-4 py-3 text-sm text-gray-900">{product.sku}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{product.name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{product.category}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900">${product.price.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900">{product.stockQuantity}</td>
-                  <td className="px-4 py-3 text-sm">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        product.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      {product.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </td>
-                  {isAdmin && (
-                    <td className="px-4 py-3 text-sm space-x-2">
-                      <button
-                        onClick={() => navigate(`/products/${product._id}/edit`)}
-                        className="text-indigo-600 hover:text-indigo-800 font-medium"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setDeleteId(product._id)}
-                        className="text-red-600 hover:text-red-800 font-medium"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {pagination && (
         <div className="flex items-center justify-between mt-4">
-          <button
-            onClick={() => setPage((p) => p - 1)}
-            disabled={page <= 1}
-            className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-40"
-          >
+          <SecondaryButton size="sm" onClick={() => setPage((p) => p - 1)} disabled={page <= 1}>
             Previous
-          </button>
+          </SecondaryButton>
           <span className="text-sm text-gray-600">
             Page {page} of {pagination.totalPages}
           </span>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page >= pagination.totalPages}
-            className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-40"
-          >
+          <SecondaryButton size="sm" onClick={() => setPage((p) => p + 1)} disabled={page >= pagination.totalPages}>
             Next
-          </button>
+          </SecondaryButton>
         </div>
       )}
 
@@ -167,18 +150,12 @@ export function ProductsPage() {
           <div className="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full">
             <p className="text-gray-800 mb-4">Are you sure you want to delete this product?</p>
             <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="px-4 py-2 border border-gray-300 rounded text-sm"
-              >
+              <SecondaryButton onClick={() => setDeleteId(null)}>
                 Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-              >
+              </SecondaryButton>
+              <Button variant="destructive" onClick={handleConfirmDelete}>
                 Confirm
-              </button>
+              </Button>
             </div>
           </div>
         </div>

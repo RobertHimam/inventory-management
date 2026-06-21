@@ -39,11 +39,13 @@ export class EventBus {
   private exchange: string;
   private connection: RabbitMQConnection;
   private dlxExchange: string;
+  private serviceId: string;
 
-  constructor(connection: RabbitMQConnection, exchange: string) {
+  constructor(connection: RabbitMQConnection, exchange: string, serviceId: string) {
     this.connection = connection;
     this.exchange = exchange;
     this.dlxExchange = `${exchange}.dlx`;
+    this.serviceId = serviceId;
   }
 
   async publish(eventType: string, payload: unknown, correlationId?: string): Promise<void> {
@@ -65,7 +67,7 @@ export class EventBus {
     handler: (payload: unknown, headers: Record<string, unknown>, correlationId?: string) => void
   ): Promise<void> {
     const channel = this.connection.getChannel();
-    const queue = `${this.exchange}.${eventType}.queue`;
+    const queue = `${this.exchange}.${eventType}.${this.serviceId}.queue`;
     const routingKey = eventType;
 
     // Declare DLX and DLQ

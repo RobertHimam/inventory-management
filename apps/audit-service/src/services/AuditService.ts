@@ -25,10 +25,11 @@ export class AuditService {
       const p = payload as Record<string, unknown>;
       const cid = correlationId || p.correlationId || (headers && headers['X-Correlation-ID']);
 
+      const userId = p.userId as string;
       const auditData: Partial<IAuditLog> = {
         correlationId: cid as string,
-        userId: p.userId as string,
-        username: p.username as string,
+        userId,
+        username: (p.username as string) || userId,
         role: p.role as IAuditLog['role'],
         action: p.action as IAuditLog['action'],
         resourceType: p.resourceType as string,
@@ -41,7 +42,6 @@ export class AuditService {
       if (
         !auditData.correlationId ||
         !auditData.userId ||
-        !auditData.username ||
         !auditData.role ||
         !auditData.action ||
         !auditData.resourceType ||

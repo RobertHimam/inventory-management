@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
-import app from './app';
+import { createApp } from './app';
 import { config } from './config';
 import { createLogger } from '@inventory/shared-logger';
+import { EventBus, RabbitMQConnection } from '@inventory/shared-rabbitmq';
 
 const logger = createLogger({ level: 'info' });
 
@@ -11,6 +12,12 @@ async function start() {
       dbName: config.authDb,
     });
     logger.info('MongoDB connected');
+
+    const rabbitConn = new RabbitMQConnection(config.rabbitmqUrl);
+    await rabbitConn.connect();
+    const eventBus = new EventBus(rabbitConn, config.rabbitmqExchange, 'auth');
+
+    const app = createApp(eventBus);
     app.listen(config.port, () => {
       logger.info(`Auth service listening on port ${config.port}`);
     });

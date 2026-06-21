@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { loginApi } from '../api/authApi'
 import axios from 'axios'
-import { Button } from '@/components/ui/button'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { Input } from '@/components/ui/input'
 
 const loginSchema = z.object({
@@ -84,13 +84,13 @@ export default function LoginPage() {
             )}
           </div>
 
-          <Button
+          <PrimaryButton
             type="submit"
             disabled={isSubmitting}
             className="w-full"
           >
             {isSubmitting ? 'Signing in…' : 'Sign in'}
-          </Button>
+          </PrimaryButton>
         </form>
       </div>
     </div>

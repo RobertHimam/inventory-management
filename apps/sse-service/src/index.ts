@@ -17,21 +17,10 @@ async function start() {
     // Create Express app
     const app = createApp(sseService, config.jwtSecret);
 
-    // RabbitMQ Connection & Setup
+    // RabbitMQ Connection & Setup — subscribe only after connect resolves
     const rabbitConn = new RabbitMQConnection(config.rabbitmqUrl);
-    rabbitConn.connect()
-      .then(() => {
-        logger.info('Connected to RabbitMQ in SSE Service');
-      })
-      .catch((err) => {
-        logger.error('Failed to connect to RabbitMQ:', {
-          error: err instanceof Error ? err.message : String(err),
-        });
-      });
+    const eventBus = new EventBus(rabbitConn, config.rabbitmqExchange, 'sse');
 
-    const eventBus = new EventBus(rabbitConn, config.rabbitmqExchange);
-
-    // Subscriptions to supported events
     const eventsToSubscribe = [
       'stock.in.created',
       'stock.out.created',
@@ -40,19 +29,19 @@ async function start() {
       'notification.created',
     ];
 
+    await rabbitConn.connect();
+    logger.info('Connected to RabbitMQ in SSE Service');
+
     for (const event of eventsToSubscribe) {
-      eventBus.subscribe(event, async (payload: unknown) => {
+      await eventBus.subscribe(event, async (payload: unknown) => {
         logger.info(`Received RabbitMQ event: ${event}`, { payload });
         const handled = sseService.handleRabbitMQEvent(event, payload as Record<string, unknown>);
         if (!handled) {
           logger.warn(`Failed to process or validate event: ${event}`);
         }
-      }).catch((err) => {
-        logger.error(`Failed to subscribe to event: ${event}`, {
-          error: err instanceof Error ? err.message : String(err),
-        });
       });
     }
+    logger.info('Subscribed to all SSE events');
 
     app.listen(config.port, () => {
       logger.info(`SSE Service listening on port ${config.port}`);

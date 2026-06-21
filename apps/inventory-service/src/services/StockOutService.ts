@@ -58,6 +58,7 @@ export class StockOutService {
           stockOutId: transaction.id,
           productId,
           quantity,
+          userId,
         });
 
         try {

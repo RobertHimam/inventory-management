@@ -1,6 +1,6 @@
 import { useProductList } from '../hooks/useProducts'
 import { useInventoryList } from '../hooks/useInventory'
-import { Button } from '@/components/ui/button'
+import { SecondaryButton } from '@/components/ui/SecondaryButton'
 
 function StatCard({ label, value, isLoading }: { label: string; value: number | undefined; isLoading: boolean }) {
   return (
@@ -47,15 +47,15 @@ export function DashboardPage() {
       <div className="mt-8 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
         <h2 className="text-sm font-semibold text-gray-900 mb-4">Quick actions</h2>
         <div className="flex flex-wrap gap-3">
-          <Button variant="outline" asChild>
+          <SecondaryButton asChild>
             <a href="/products">View Products</a>
-          </Button>
-          <Button variant="outline" asChild>
+          </SecondaryButton>
+          <SecondaryButton asChild>
             <a href="/inventory">View Inventory</a>
-          </Button>
-          <Button variant="outline" asChild>
+          </SecondaryButton>
+          <SecondaryButton asChild>
             <a href="/reports">View Reports</a>
-          </Button>
+          </SecondaryButton>
         </div>
       </div>
     </div>

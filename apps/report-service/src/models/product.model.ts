@@ -17,9 +17,9 @@ const ProductSchema = new Schema<IProduct>(
     name: { type: String, required: true },
     sku: { type: String, required: true },
     price: { type: Number, required: true },
-    cost: { type: Number, required: true },
-    quantity: { type: Number, required: true, default: 0 },
-    reorderLevel: { type: Number, required: true, default: 0 },
+    cost: { type: Number, default: 0 },
+    quantity: { type: Number, default: 0 },
+    reorderLevel: { type: Number, default: 0 },
     deletedAt: { type: Date, default: null },
   },
   { timestamps: true }

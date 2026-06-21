@@ -4,6 +4,10 @@ import { toast } from 'sonner'
 import { useSupplierList, useDeleteSupplier } from '../hooks/useSuppliers'
 import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
+import { Button } from '@/components/ui/button'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { SecondaryButton } from '@/components/ui/SecondaryButton'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 const LIMIT = 10
 
@@ -51,12 +55,9 @@ export function SuppliersPage() {
       <div className="flex flex-wrap items-center justify-between gap-y-3 mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Suppliers</h1>
         {isAdmin && (
-          <button
-            onClick={() => navigate('/suppliers/new')}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm font-medium"
-          >
+          <PrimaryButton onClick={() => navigate('/suppliers/new')}>
             Add Supplier
-          </button>
+          </PrimaryButton>
         )}
       </div>
 
@@ -81,68 +82,50 @@ export function SuppliersPage() {
       )}
 
       {!isLoading && !isError && (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200" aria-label="Suppliers">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Address</th>
+        <Table aria-label="Suppliers">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Address</TableHead>
+              {isAdmin && <TableHead>Actions</TableHead>}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {suppliers.map((supplier) => (
+              <TableRow key={supplier._id}>
+                <TableCell>{supplier.name}</TableCell>
+                <TableCell className="text-muted-foreground">{supplier.contactEmail ?? '-'}</TableCell>
+                <TableCell className="text-muted-foreground">{supplier.phone ?? '-'}</TableCell>
+                <TableCell className="text-muted-foreground">{supplier.address ?? '-'}</TableCell>
                 {isAdmin && (
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  <TableCell className="space-x-1">
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/suppliers/${supplier._id}/edit`)}>
+                      Edit
+                    </Button>
+                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-800" onClick={() => setDeleteId(supplier._id)}>
+                      Delete
+                    </Button>
+                  </TableCell>
                 )}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {suppliers.map((supplier) => (
-                <tr key={supplier._id}>
-                  <td className="px-4 py-3 text-sm text-gray-900">{supplier.name}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{supplier.contactEmail ?? '-'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{supplier.phone ?? '-'}</td>
-                  <td className="px-4 py-3 text-sm text-gray-500">{supplier.address ?? '-'}</td>
-                  {isAdmin && (
-                    <td className="px-4 py-3 text-sm space-x-2">
-                      <button
-                        onClick={() => navigate(`/suppliers/${supplier._id}/edit`)}
-                        className="text-indigo-600 hover:text-indigo-800 font-medium"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => setDeleteId(supplier._id)}
-                        className="text-red-600 hover:text-red-800 font-medium"
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
 
       {pagination && (
         <div className="flex items-center justify-between mt-4">
-          <button
-            onClick={() => setPage((p) => p - 1)}
-            disabled={page <= 1}
-            className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-40"
-          >
+          <SecondaryButton size="sm" onClick={() => setPage((p) => p - 1)} disabled={page <= 1}>
             Previous
-          </button>
+          </SecondaryButton>
           <span className="text-sm text-gray-600">
             Page {page} of {pagination.totalPages}
           </span>
-          <button
-            onClick={() => setPage((p) => p + 1)}
-            disabled={page >= pagination.totalPages}
-            className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-40"
-          >
+          <SecondaryButton size="sm" onClick={() => setPage((p) => p + 1)} disabled={page >= pagination.totalPages}>
             Next
-          </button>
+          </SecondaryButton>
         </div>
       )}
 
@@ -155,18 +138,12 @@ export function SuppliersPage() {
           <div className="bg-white rounded-lg p-6 shadow-xl max-w-sm w-full">
             <p className="text-gray-800 mb-4">Are you sure you want to delete this supplier?</p>
             <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="px-4 py-2 border border-gray-300 rounded text-sm"
-              >
+              <SecondaryButton onClick={() => setDeleteId(null)}>
                 Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700"
-              >
+              </SecondaryButton>
+              <Button variant="destructive" onClick={handleConfirmDelete}>
                 Confirm
-              </button>
+              </Button>
             </div>
           </div>
         </div>

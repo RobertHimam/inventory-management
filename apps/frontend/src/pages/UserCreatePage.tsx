@@ -6,6 +6,8 @@ import { toast } from 'sonner'
 import { useCreateManagedUser } from '../hooks/useUserManagement'
 import { Role } from '@inventory/shared-types'
 import type { CreateUserDto } from '@inventory/shared-types'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { SecondaryButton } from '@/components/ui/SecondaryButton'
 
 const schema = z.object({
   username: z.string().min(1, 'Username is required').max(50, 'Max 50 characters'),
@@ -121,20 +123,12 @@ export function UserCreatePage() {
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
-          >
+          <PrimaryButton type="submit" disabled={isPending}>
             {isPending ? 'Creating...' : 'Create'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/users')}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          </PrimaryButton>
+          <SecondaryButton type="button" onClick={() => navigate('/users')}>
             Cancel
-          </button>
+          </SecondaryButton>
         </div>
       </form>
     </div>

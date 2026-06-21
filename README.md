@@ -32,7 +32,8 @@ Monorepo for a distributed inventory management platform built with microservice
 - ReactJS
 - Vite
 - TailwindCSS
-- shadcn/ui (Radix UI primitives + CVA)
+- shadcn/ui (Radix UI primitives + CVA) — Button, Input, Table, Dialog, etc.
+- `PrimaryButton` / `SecondaryButton` semantic wrappers (lock variant, enforce intent)
 - Sonner (toast notifications)
 - React Router
 - Axios
@@ -199,11 +200,14 @@ Services never communicate through shared databases.
 
 Dead Letter Queue mandatory.
 
+Queue naming: `{exchange}.{eventType}.{serviceId}.queue`
+DLQ naming: `{exchange}.{eventType}.{serviceId}.queue.dlq`
+
 Examples:
 
-- `inventory.dlq`
-- `notification.dlq`
-- `audit.dlq`
+- `inventory.events.product.created.report.queue` / `.dlq`
+- `inventory.events.stock.out.created.notification.queue` / `.dlq`
+- `inventory.events.audit.logged.audit.queue` / `.dlq`
 
 Failed messages must be routed to DLQ.
 
@@ -213,12 +217,20 @@ Services depend on `EventBus` abstraction.
 
 Never couple business logic directly to RabbitMQ.
 
-Example:
+**Each service must pass its own `serviceId`** when constructing `EventBus`. This ensures each subscriber gets a dedicated queue per event type (pub/sub fan-out, not competing consumers).
 
 ```typescript
-EventBus
-RabbitMQEventBus
+// Each service uses a unique serviceId
+new EventBus(rabbitConn, exchange, 'report')
+new EventBus(rabbitConn, exchange, 'inventory')
+new EventBus(rabbitConn, exchange, 'audit')
 ```
+
+Queue naming convention: `{exchange}.{eventType}.{serviceId}.queue`
+
+Example: `inventory.events.product.created.report.queue` — report-service only.
+
+**Never reuse queue names across services** — competing consumers cause messages to be delivered to only one subscriber (round-robin).
 
 ## Server-Sent Events (SSE)
 

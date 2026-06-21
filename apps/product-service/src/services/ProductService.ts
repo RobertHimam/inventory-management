@@ -45,6 +45,7 @@ export class ProductService {
           sku: product.sku,
           categoryId: product.category,
           price: product.price,
+          stockQuantity: product.stockQuantity,
         });
         try {
           await this.eventBus.publish(event.type, event.payload, event.correlationId);

@@ -14,7 +14,10 @@ const queryClient = new QueryClient({
 })
 
 setTokenGetter(() => useAuthStore.getState().accessToken)
-setOnUnauthorized(() => useAuthStore.getState().clearAuth())
+setOnUnauthorized(() => {
+  useAuthStore.getState().clearAuth()
+  window.location.replace('/login')
+})
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

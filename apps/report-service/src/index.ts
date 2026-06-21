@@ -18,21 +18,10 @@ async function start() {
     const reportService = new ReportService(logger);
     const app = createApp(reportService, config.jwtSecret);
 
-    // Connect to RabbitMQ
+    // Connect to RabbitMQ then subscribe — order matters: channel must exist before subscribe
     const rabbitConn = new RabbitMQConnection(config.rabbitmqUrl);
-    rabbitConn.connect()
-      .then(() => {
-        logger.info('Connected to RabbitMQ in Report Service');
-      })
-      .catch((err) => {
-        logger.error('Failed to connect to RabbitMQ in Report Service:', {
-          error: err instanceof Error ? err.message : String(err),
-        });
-      });
+    const eventBus = new EventBus(rabbitConn, config.rabbitmqExchange, 'report');
 
-    const eventBus = new EventBus(rabbitConn, process.env.RABBITMQ_EXCHANGE || 'test-exchange');
-
-    // Subscriptions to keep the read model sync'd
     const eventSubscriptions = [
       { event: 'product.created', handler: reportService.handleProductCreated.bind(reportService) },
       { event: 'product.updated', handler: reportService.handleProductUpdated.bind(reportService) },
@@ -43,8 +32,11 @@ async function start() {
       { event: 'stock.low.detected', handler: reportService.handleStockLowDetected.bind(reportService) },
     ];
 
+    await rabbitConn.connect();
+    logger.info('Connected to RabbitMQ in Report Service');
+
     for (const sub of eventSubscriptions) {
-      eventBus.subscribe(sub.event, async (payload: unknown) => {
+      await eventBus.subscribe(sub.event, async (payload: unknown) => {
         try {
           await sub.handler(payload);
         } catch (err) {
@@ -54,12 +46,9 @@ async function start() {
           });
           throw err;
         }
-      }).catch((err) => {
-        logger.error(`Failed to subscribe to event ${sub.event}:`, {
-          error: err instanceof Error ? err.message : String(err),
-        });
       });
     }
+    logger.info('Subscribed to all report events');
 
     app.listen(config.port, () => {
       logger.info(`Report Service listening on port ${config.port}`);

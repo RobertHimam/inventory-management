@@ -9,19 +9,12 @@ import { InventoryController } from '../controllers/InventoryController';
 import { InventoryService } from '../services/InventoryService';
 import { InventoryRepository } from '../repositories/InventoryRepository';
 import { authenticate, authorize } from '@inventory/shared-auth';
-import { EventBus, RabbitMQConnection } from '@inventory/shared-rabbitmq';
+import { EventBus } from '@inventory/shared-rabbitmq';
 import { config } from '../config';
 import { idempotency } from '../middleware/idempotency.middleware';
 
+export function createInventoryRouter(eventBus: EventBus): Router {
 const router: Router = Router();
-
-// Initialize RabbitMQ connection and EventBus
-const rabbitConn = new RabbitMQConnection(config.rabbitmqUrl);
-rabbitConn.connect().catch((err) => {
-  // eslint-disable-next-line no-console
-  console.error('Failed to connect to RabbitMQ:', err);
-});
-const eventBus = new EventBus(rabbitConn, config.rabbitmqExchange);
 
 const inventoryRepository = new InventoryRepository();
 const stockInService = new StockInService(inventoryRepository, eventBus);
@@ -36,10 +29,7 @@ const stockAdjustmentController = new StockAdjustmentController(stockAdjustmentS
 const inventoryService = new InventoryService(inventoryRepository);
 const inventoryController = new InventoryController(inventoryService);
 
-// Setup Auth middlewares
 const auth = authenticate(config.jwtSecret);
-// Ensure only ADMIN can perform Stock In/Out (USER only has inventory:read/stock:in/out in permissions but AGENTS.md forbids Stock In for USER)
-// By checking 'inventory:write', we restrict it to ADMIN (since ADMIN has '*' and USER does not have 'inventory:write')
 const canWrite = authorize(['inventory:write']);
 const canRead = authorize(['inventory:read']);
 
@@ -263,4 +253,7 @@ router.get('/', auth, canRead, inventoryController.listItems.bind(inventoryContr
  */
 router.get('/:productId', auth, canRead, inventoryController.getItemDetail.bind(inventoryController));
 
-export default router;
+return router;
+}
+
+export default createInventoryRouter;

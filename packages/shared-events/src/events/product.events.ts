@@ -8,6 +8,7 @@ export interface ProductCreatedEventPayload {
   sku: string;
   categoryId: string;
   price: number;
+  stockQuantity?: number;
 }
 
 export const productCreatedEventSchema = z.object({
@@ -16,6 +17,7 @@ export const productCreatedEventSchema = z.object({
   sku: z.string(),
   categoryId: z.string(),
   price: z.number(),
+  stockQuantity: z.number().optional(),
 });
 
 export function createProductCreatedEvent(

@@ -4,6 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { useStockAdjust } from '../hooks/useInventory'
+import { useProductList } from '../hooks/useProducts'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { SecondaryButton } from '@/components/ui/SecondaryButton'
 
 const schema = z.object({
   productId: z.string().min(1, 'Product ID is required').trim(),
@@ -24,6 +27,7 @@ function getErrorMessage(error: unknown): string {
 export function StockAdjustmentPage() {
   const navigate = useNavigate()
   const { mutate: stockAdjust, isPending, isError, error } = useStockAdjust()
+  const { data: productsData, isLoading: productsLoading } = useProductList({ limit: 1000 })
 
   const {
     register,
@@ -62,14 +66,21 @@ export function StockAdjustmentPage() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label htmlFor="productId" className="block text-sm font-medium text-gray-700 mb-1">
-            Product ID
+            Product
           </label>
-          <input
+          <select
             id="productId"
-            type="text"
             {...register('productId')}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+            disabled={productsLoading}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100"
+          >
+            <option value="">Select a product</option>
+            {productsData?.data.map((p) => (
+              <option key={p._id} value={p._id}>
+                {p.name} ({p.sku})
+              </option>
+            ))}
+          </select>
           {errors.productId && <p className="mt-1 text-xs text-red-600">{errors.productId.message}</p>}
         </div>
 
@@ -100,20 +111,12 @@ export function StockAdjustmentPage() {
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700 disabled:opacity-50"
-          >
+          <PrimaryButton type="submit" disabled={isPending}>
             {isPending ? 'Submitting...' : 'Submit'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/inventory')}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          </PrimaryButton>
+          <SecondaryButton type="button" onClick={() => navigate('/inventory')}>
             Cancel
-          </button>
+          </SecondaryButton>
         </div>
       </form>
     </div>

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import type { AuditQueryParams } from '@inventory/shared-types'
 import { useAuditList } from '../hooks/useAudit'
-import { Button } from '@/components/ui/button'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { SecondaryButton } from '@/components/ui/SecondaryButton'
 import { Input } from '@/components/ui/input'
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 const PAGE_LIMIT = 20
 
@@ -56,9 +58,9 @@ export function AuditPage() {
           onChange={(e) => setResourceType(e.target.value)}
           className="w-full sm:w-36"
         />
-        <Button type="submit">
+        <PrimaryButton type="submit">
           Filter
-        </Button>
+        </PrimaryButton>
       </form>
 
       {isLoading && <div>Loading...</div>}
@@ -66,42 +68,38 @@ export function AuditPage() {
 
       {!isLoading && !isError && (
         <>
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  {['Time', 'User', 'Role', 'Action', 'Resource', 'Resource ID', 'Correlation ID'].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {logs.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-4 py-6 text-center text-gray-400">
-                      No audit logs found.
-                    </td>
-                  </tr>
-                ) : (
-                  logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 whitespace-nowrap text-gray-500">
-                        {new Date(log.createdAt).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap">{log.username}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{log.role}</td>
-                      <td className="px-4 py-3 whitespace-nowrap font-medium">{log.action}</td>
-                      <td className="px-4 py-3 whitespace-nowrap">{log.resourceType}</td>
-                      <td className="px-4 py-3 whitespace-nowrap font-mono text-xs">{log.resourceId}</td>
-                      <td className="px-4 py-3 whitespace-nowrap font-mono text-xs text-gray-400">{log.correlationId}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          <Table className="rounded-lg border border-gray-200">
+            <TableHeader>
+              <TableRow>
+                {['Time', 'User', 'Role', 'Action', 'Resource', 'Resource ID', 'Correlation ID'].map((h) => (
+                  <TableHead key={h}>{h}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {logs.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-6 text-center text-muted-foreground">
+                    No audit logs found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                logs.map((log) => (
+                  <TableRow key={log.id}>
+                    <TableCell className="whitespace-nowrap text-muted-foreground">
+                      {new Date(log.createdAt).toLocaleString()}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap">{log.username}</TableCell>
+                    <TableCell className="whitespace-nowrap">{log.role}</TableCell>
+                    <TableCell className="whitespace-nowrap font-medium">{log.action}</TableCell>
+                    <TableCell className="whitespace-nowrap">{log.resourceType}</TableCell>
+                    <TableCell className="whitespace-nowrap font-mono text-xs">{log.resourceId}</TableCell>
+                    <TableCell className="whitespace-nowrap font-mono text-xs text-muted-foreground">{log.correlationId}</TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
 
           {pagination && pagination.totalPages > 1 && (
             <div className="flex items-center justify-between mt-4">
@@ -109,20 +107,12 @@ export function AuditPage() {
                 Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
               </p>
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setPage((p) => p - 1)}
-                  disabled={page === 1}
-                >
+                <SecondaryButton size="sm" onClick={() => setPage((p) => p - 1)} disabled={page === 1}>
                   Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page >= pagination.totalPages}
-                >
+                </SecondaryButton>
+                <SecondaryButton size="sm" onClick={() => setPage((p) => p + 1)} disabled={page >= pagination.totalPages}>
                   Next
-                </Button>
+                </SecondaryButton>
               </div>
             </div>
           )}

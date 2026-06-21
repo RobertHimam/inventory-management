@@ -65,21 +65,10 @@ async function start() {
     const notifService = new NotificationService(emailClient, logger);
     const app = createApp(notifService, config.jwtSecret);
 
-    // Connect to RabbitMQ
+    // Connect to RabbitMQ then subscribe — channel must exist before subscribe
     const rabbitConn = new RabbitMQConnection(config.rabbitmqUrl);
-    rabbitConn.connect()
-      .then(() => {
-        logger.info('Connected to RabbitMQ in Notification Service');
-      })
-      .catch((err) => {
-        logger.error('Failed to connect to RabbitMQ in Notification Service:', {
-          error: err instanceof Error ? err.message : String(err),
-        });
-      });
+    const eventBus = new EventBus(rabbitConn, config.rabbitmqExchange, 'notification');
 
-    const eventBus = new EventBus(rabbitConn, config.rabbitmqExchange);
-
-    // RabbitMQ event subscribers
     const subscriptions = [
       { event: 'stock.low.detected', handler: notifService.handleStockLowDetected.bind(notifService) },
       { event: 'stock.in.created', handler: notifService.handleStockIn.bind(notifService) },
@@ -87,8 +76,11 @@ async function start() {
       { event: 'user.created', handler: notifService.handleUserCreated.bind(notifService) },
     ];
 
+    await rabbitConn.connect();
+    logger.info('Connected to RabbitMQ in Notification Service');
+
     for (const sub of subscriptions) {
-      eventBus.subscribe(sub.event, async (payload: unknown) => {
+      await eventBus.subscribe(sub.event, async (payload: unknown) => {
         try {
           await sub.handler(payload);
         } catch (err) {
@@ -96,15 +88,11 @@ async function start() {
             error: err instanceof Error ? err.message : String(err),
             payload,
           });
-          // Throw so the EventBus nacks the message and it routes to DLQ
           throw err;
         }
-      }).catch((err) => {
-        logger.error(`Failed to subscribe to event: ${sub.event}`, {
-          error: err instanceof Error ? err.message : String(err),
-        });
       });
     }
+    logger.info('Subscribed to all notification events');
 
     app.listen(config.port, () => {
       logger.info(`Notification Service listening on port ${config.port}`);

@@ -10,7 +10,7 @@ function getInt(key: string): number {
   return num;
 }
 
-const required = ['NODE_ENV', 'PORT', 'MONGODB_URI', 'REPORT_DB', 'RABBITMQ_URL', 'JWT_SECRET'];
+const required = ['NODE_ENV', 'PORT', 'MONGODB_URI', 'REPORT_DB', 'RABBITMQ_URL', 'RABBITMQ_EXCHANGE', 'JWT_SECRET'];
 
 const missing = required.filter((key) => !process.env[key]);
 if (missing.length > 0) {
@@ -23,5 +23,6 @@ export const config = {
   mongodbUri: process.env.MONGODB_URI!,
   reportDb: process.env.REPORT_DB!,
   rabbitmqUrl: process.env.RABBITMQ_URL!,
+  rabbitmqExchange: process.env.RABBITMQ_EXCHANGE!,
   jwtSecret: process.env.JWT_SECRET!,
 };

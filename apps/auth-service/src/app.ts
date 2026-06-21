@@ -1,13 +1,14 @@
 import express, { Express } from 'express';
 import cookieParser from 'cookie-parser';
-import authRoutes from './routes/auth.routes';
+import createAuthRouter from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import healthRoutes from './routes/health.routes';
 import { errorMiddleware } from './middleware/error.middleware';
 import { correlationMiddleware } from './middleware/correlation.middleware';
 import { setupSwagger } from './swagger/docs';
+import { EventBus } from '@inventory/shared-rabbitmq';
 
-export function createApp(): Express {
+export function createApp(eventBus: EventBus): Express {
   const app = express();
 
   app.use(express.json());
@@ -15,7 +16,7 @@ export function createApp(): Express {
   app.use(correlationMiddleware);
 
   // Routes
-  app.use('/auth', authRoutes);
+  app.use('/auth', createAuthRouter(eventBus));
   app.use('/users', userRoutes);
   app.use(healthRoutes);
 
@@ -27,5 +28,3 @@ export function createApp(): Express {
 
   return app;
 }
-
-export default createApp();

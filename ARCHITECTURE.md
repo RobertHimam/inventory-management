@@ -70,7 +70,17 @@ The Inventory Management System is a distributed microservices application follo
 - Routing (React Router)
 - Toast notifications (Sonner)
 
-**UI Component Library**: shadcn/ui built on Radix UI primitives + Tailwind CSS + CVA. All interactive elements (`Button`, `Input`, `Dialog`, `Select`, `Card`, `DropdownMenu`, `Toast`, etc.) use shadcn components for consistent accessible UI.
+**UI Component Library**: shadcn/ui built on Radix UI primitives + Tailwind CSS + CVA. All interactive elements use shadcn components for consistent accessible UI.
+
+**Semantic Button Wrappers** (`components/ui/PrimaryButton.tsx`, `SecondaryButton.tsx`):
+- `PrimaryButton` — `variant="default"` locked (accent fill). Primary actions: submit, create, confirm.
+- `SecondaryButton` — `variant="outline"` locked (bordered). Secondary: cancel, navigate, paginate.
+- Raw `Button variant="destructive"` for irreversible actions; `variant="ghost"` for inline icon actions.
+- The `variant` prop is destructured and discarded in both wrappers — callers cannot override the locked variant.
+
+**Table**: shadcn `Table` / `TableHeader` / `TableBody` / `TableHead` / `TableRow` / `TableCell` used on all list pages. No raw `<table>` HTML in page components.
+
+**Tailwind + CSS Variables**: `index.css` defines CSS custom properties as RGB triplets (`100 116 139`). `tailwind.config.js` wraps them as `rgb(var(--x))`. Using `hsl(var(...))` with RGB values produces invalid CSS and corrupts colors (renders as pink instead of gray).
 
 **Database**: None (API-only)
 
@@ -355,16 +365,20 @@ The Inventory Management System is a distributed microservices application follo
 
 **Events Consumed**:
 
-- `stock.in.created` - Invalidate valuation cache
-- `stock.out.created` - Invalidate sales/dashboard cache
-- `stock.adjustment.created` - Invalidate all caches
-- `stock.low.detected` - Invalidate low stock cache
+- `product.created` — Upsert product into report DB (`$setOnInsert` for quantity from `stockQuantity`); invalidate `dashboard` cache
+- `product.updated` — Update name/sku/price; invalidate `dashboard` + `inventory-valuation` cache
+- `product.deleted` — Soft-delete (set `deletedAt`); invalidate `dashboard` + `inventory-valuation` cache
+- `stock.in.created` — Increment product quantity; invalidate `inventory-valuation` cache
+- `stock.out.created` — Decrement quantity, record sale; invalidate `sales` + `dashboard` cache
+- `stock.adjustment.created` — Set quantity to `newQuantity`; invalidate all caches
+- `stock.low.detected` — Invalidate `low-stock` cache
 
 **Caching Strategy**:
 
-- Reports are expensive → cache for 5 minutes
-- Invalidate cache on relevant events
+- Cache key format: `{reportType}:{role}` (e.g. `dashboard:ADMIN`)
+- Invalidate cache on all write events — no TTL-based expiry
 - Cache per user role (ADMIN sees all data, USER sees filtered)
+- `$setOnInsert` used in product upsert to prevent overwriting quantity on duplicate events
 
 **Packages**: `apps/report-service`
 
@@ -477,6 +491,7 @@ The Inventory Management System is a distributed microservices application follo
 - Audit logs are **immutable** (never update, never delete)
 - All services must emit audit events for state changes
 - Audit service is the single source of truth for "what happened"
+- `username` field falls back to `userId` if absent in the event payload (backward compatibility with older event schema versions)
 
 **Packages**: `apps/audit-service`
 
@@ -629,21 +644,34 @@ Example: `inventory` collection stores `productName` and `sku` (denormalized fro
 **Pattern**: Services depend on `EventBus` interface, not RabbitMQ directly.
 
 ```typescript
-interface EventBus {
-  publish(event: Event): Promise<void>
-  subscribe(eventType: string, handler: EventHandler): Promise<void>
-}
+// Constructor requires a serviceId — makes queue names unique per subscriber
+new EventBus(connection, exchange, serviceId)
 
-class RabbitMQEventBus implements EventBus {
-  // wraps amqplib/channel operations
-}
+// Queue name format:
+// {exchange}.{eventType}.{serviceId}.queue
+// e.g. inventory.events.product.created.report.queue
 ```
+
+**Fan-out (pub/sub) rule**: Every subscriber that needs a copy of a message must use a **unique queue** bound to the same exchange+routing-key. Sharing a queue causes competing consumers (round-robin delivery — only one subscriber receives each message).
+
+**serviceId assignments**:
+
+| Service | serviceId |
+|---|---|
+| audit-service | `audit` |
+| auth-service | `auth` |
+| inventory-service | `inventory` |
+| notification-service | `notification` |
+| product-service | `product` |
+| report-service | `report` |
+| sse-service | `sse` |
 
 **Benefits**:
 
 - Swap RabbitMQ for Kafka without touching business logic
 - Mock EventBus in tests
 - Centralize connection/retry logic
+- Per-service queues guarantee all subscribers receive all messages
 
 ---
 

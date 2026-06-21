@@ -31,6 +31,7 @@ export interface StockOutCreatedPayload {
   stockOutId: string;
   productId: string;
   quantity: number;
+  userId?: string;
 }
 
 export function createStockOutCreatedEvent(

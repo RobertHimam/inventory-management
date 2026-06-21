@@ -4,7 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { useCreateProduct } from '../hooks/useProducts'
+import { useCategoryList } from '../hooks/useCategories'
 import type { CreateProductDto } from '@inventory/shared-types'
+import { PrimaryButton } from '@/components/ui/PrimaryButton'
+import { SecondaryButton } from '@/components/ui/SecondaryButton'
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Max 100 characters'),
@@ -34,6 +37,7 @@ function getErrorMessage(error: unknown): string {
 export function ProductCreatePage() {
   const navigate = useNavigate()
   const { mutate: createProduct, isPending, isError, error } = useCreateProduct()
+  const { data: categoriesData, isLoading: categoriesLoading } = useCategoryList({ limit: 100 })
 
   const {
     register,
@@ -133,12 +137,19 @@ export function ProductCreatePage() {
           <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
             Category
           </label>
-          <input
+          <select
             id="category"
-            type="text"
             {...register('category')}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+            disabled={categoriesLoading}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100"
+          >
+            <option value="">Select a category</option>
+            {categoriesData?.data.map((cat) => (
+              <option key={cat._id} value={cat.name}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
           {errors.category && <p className="mt-1 text-xs text-red-600">{errors.category.message}</p>}
         </div>
 
@@ -163,20 +174,12 @@ export function ProductCreatePage() {
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button
-            type="submit"
-            disabled={isPending}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
-          >
+          <PrimaryButton type="submit" disabled={isPending}>
             {isPending ? 'Creating...' : 'Create'}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/products')}
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
-          >
+          </PrimaryButton>
+          <SecondaryButton type="button" onClick={() => navigate('/products')}>
             Cancel
-          </button>
+          </SecondaryButton>
         </div>
       </form>
     </div>

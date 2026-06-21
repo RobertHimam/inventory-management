@@ -3,17 +3,12 @@ import { ProductController } from '../controllers/ProductController';
 import { ProductService } from '../services/ProductService';
 import { ProductRepository } from '../repositories/ProductRepository';
 import { authenticate, authorize } from '@inventory/shared-auth';
-import { EventBus, RabbitMQConnection } from '@inventory/shared-rabbitmq';
+import { EventBus } from '@inventory/shared-rabbitmq';
 import { config } from '../config';
+import { idempotency } from '../middleware/idempotency.middleware';
 
+export function createProductRouter(eventBus: EventBus): Router {
 const router: Router = Router();
-
-// Initialize dependencies
-const rabbitConn = new RabbitMQConnection(config.rabbitmqUrl);
-rabbitConn.connect().catch((err) => {
-  console.error('Failed to connect to RabbitMQ:', err);
-});
-const eventBus = new EventBus(rabbitConn, config.rabbitmqExchange);
 
 const productRepository = new ProductRepository();
 const productService = new ProductService(productRepository, eventBus);
@@ -22,7 +17,6 @@ const productController = new ProductController(productService);
 const auth = authenticate(config.jwtSecret);
 const canRead = authorize(['product:read']);
 const canWrite = authorize(['product:write']);
-import { idempotency } from '../middleware/idempotency.middleware';
 
 /**
  * @swagger
@@ -267,4 +261,7 @@ router.put('/:id', auth, canWrite, productController.updateProduct.bind(productC
  */
 router.delete('/:id', auth, canWrite, productController.deleteProduct.bind(productController));
 
-export default router;
+return router;
+}
+
+export default createProductRouter;
