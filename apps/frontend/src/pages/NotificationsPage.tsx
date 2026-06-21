@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useNotificationList, useMarkAsRead, NOTIFICATION_KEYS } from '../hooks/useNotifications'
 import { useSSE } from '../hooks/useSSE'
+import { Button } from '@/components/ui/button'
 
 export function NotificationsPage() {
   const queryClient = useQueryClient()
@@ -50,13 +51,15 @@ export function NotificationsPage() {
                   </p>
                 </div>
                 {!n.read && (
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => markAsRead.mutate(n._id)}
                     disabled={markAsRead.isPending}
-                    className="shrink-0 text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50"
+                    className="shrink-0 text-blue-600 hover:text-blue-800"
                   >
                     Mark read
-                  </button>
+                  </Button>
                 )}
               </div>
             </li>

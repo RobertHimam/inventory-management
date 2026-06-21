@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useEffect } from 'react'
+import { toast } from 'sonner'
 import { useSupplier, useUpdateSupplier } from '../hooks/useSuppliers'
 import type { UpdateSupplierDto } from '@inventory/shared-types'
 
@@ -55,7 +56,15 @@ export function SupplierEditPage() {
       ...(values.phone ? { phone: values.phone } : {}),
       ...(values.address ? { address: values.address } : {}),
     }
-    updateSupplier({ id, dto }, { onSuccess: () => navigate('/suppliers') })
+    updateSupplier({ id, dto }, {
+      onSuccess: () => {
+        toast.success('Supplier updated successfully')
+        navigate('/suppliers')
+      },
+      onError: () => {
+        toast.error('Failed to update supplier')
+      },
+    })
   }
 
   return (

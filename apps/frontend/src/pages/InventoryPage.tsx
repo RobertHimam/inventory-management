@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useInventoryList } from '../hooks/useInventory'
 import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 const LIMIT = 10
 
@@ -38,36 +40,27 @@ export function InventoryPage() {
         <h1 className="text-2xl font-bold text-gray-900">Inventory</h1>
         {isAdmin && (
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => navigate('/inventory/stock-in')}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
-            >
+            <Button onClick={() => navigate('/inventory/stock-in')}>
               Stock In
-            </button>
-            <button
-              onClick={() => navigate('/inventory/stock-out')}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm font-medium"
-            >
+            </Button>
+            <Button variant="destructive" onClick={() => navigate('/inventory/stock-out')}>
               Stock Out
-            </button>
-            <button
-              onClick={() => navigate('/inventory/adjustment')}
-              className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 text-sm font-medium"
-            >
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/inventory/adjustment')}>
               Adjust
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
       <div className="mb-4">
-        <input
+        <Input
           type="search"
           role="searchbox"
           placeholder="Search by product name or SKU..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-sm border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="max-w-sm"
           aria-label="Search inventory"
         />
       </div>
@@ -111,23 +104,23 @@ export function InventoryPage() {
 
       {pagination && (
         <div className="flex items-center justify-between mt-4">
-          <button
+          <Button
+            variant="outline"
             onClick={() => setPage((p) => p - 1)}
             disabled={page <= 1}
-            className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-40"
           >
             Previous
-          </button>
+          </Button>
           <span className="text-sm text-gray-600">
             Page {page} of {pagination.totalPages}
           </span>
-          <button
+          <Button
+            variant="outline"
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= pagination.totalPages}
-            className="px-3 py-1 border border-gray-300 rounded text-sm disabled:opacity-40"
           >
             Next
-          </button>
+          </Button>
         </div>
       )}
     </div>

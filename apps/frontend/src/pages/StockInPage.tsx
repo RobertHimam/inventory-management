@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { useStockIn } from '../hooks/useInventory'
 
 const schema = z.object({
@@ -35,7 +36,15 @@ export function StockInPage() {
   })
 
   function onSubmit(values: FormValues) {
-    stockIn({ productId: values.productId, quantity: values.quantity }, { onSuccess: () => navigate('/inventory') })
+    stockIn({ productId: values.productId, quantity: values.quantity }, {
+      onSuccess: () => {
+        toast.success('Stock in recorded successfully')
+        navigate('/inventory')
+      },
+      onError: () => {
+        toast.error('Failed to record stock in')
+      },
+    })
   }
 
   return (

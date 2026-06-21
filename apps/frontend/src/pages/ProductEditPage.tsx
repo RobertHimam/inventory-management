@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { useProduct, useUpdateProduct } from '../hooks/useProducts'
 import type { UpdateProductDto } from '@inventory/shared-types'
 
@@ -69,7 +70,15 @@ export function ProductEditPage() {
       stockQuantity: values.stockQuantity,
       isActive: values.isActive,
     }
-    updateProduct({ id, dto }, { onSuccess: () => navigate('/products') })
+    updateProduct({ id, dto }, {
+      onSuccess: () => {
+        toast.success('Product updated successfully')
+        navigate('/products')
+      },
+      onError: () => {
+        toast.error('Failed to update product')
+      },
+    })
   }
 
   if (isLoading) return <p className="p-4 sm:p-6 text-gray-500">Loading...</p>

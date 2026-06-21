@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { useCreateManagedUser } from '../hooks/useUserManagement'
 import { Role } from '@inventory/shared-types'
 import type { CreateUserDto } from '@inventory/shared-types'
@@ -43,7 +44,15 @@ export function UserCreatePage() {
       password: values.password,
       role: values.role,
     }
-    createUser(dto, { onSuccess: () => navigate('/users') })
+    createUser(dto, {
+      onSuccess: () => {
+        toast.success('User created successfully')
+        navigate('/users')
+      },
+      onError: () => {
+        toast.error('Failed to create user')
+      },
+    })
   }
 
   return (

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useUserList, useDeleteManagedUser } from '../hooks/useUserManagement'
 
 const LIMIT = 10
@@ -33,7 +34,10 @@ export function UsersPage() {
 
   function handleConfirmDelete() {
     if (deleteId) {
-      deleteUser(deleteId)
+      deleteUser(deleteId, {
+        onSuccess: () => toast.success('User deleted successfully'),
+        onError: () => toast.error('Failed to delete user'),
+      })
       setDeleteId(null)
     }
   }

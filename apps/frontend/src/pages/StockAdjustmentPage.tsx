@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { useStockAdjust } from '../hooks/useInventory'
 
 const schema = z.object({
@@ -36,7 +37,15 @@ export function StockAdjustmentPage() {
   function onSubmit(values: FormValues) {
     stockAdjust(
       { productId: values.productId, quantity: values.quantity, reason: values.reason },
-      { onSuccess: () => navigate('/inventory') }
+      {
+        onSuccess: () => {
+          toast.success('Stock adjusted successfully')
+          navigate('/inventory')
+        },
+        onError: () => {
+          toast.error('Failed to adjust stock')
+        },
+      }
     )
   }
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useSupplierList, useDeleteSupplier } from '../hooks/useSuppliers'
 import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
@@ -37,7 +38,10 @@ export function SuppliersPage() {
 
   function handleConfirmDelete() {
     if (deleteId) {
-      deleteSupplier(deleteId)
+      deleteSupplier(deleteId, {
+        onSuccess: () => toast.success('Supplier deleted successfully'),
+        onError: () => toast.error('Failed to delete supplier'),
+      })
       setDeleteId(null)
     }
   }

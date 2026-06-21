@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import type { AuditQueryParams } from '@inventory/shared-types'
 import { useAuditList } from '../hooks/useAudit'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 const PAGE_LIMIT = 20
 
@@ -33,33 +35,30 @@ export function AuditPage() {
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Audit Trail</h1>
 
       <form onSubmit={handleSearch} className="flex flex-wrap gap-3 mb-6">
-        <input
+        <Input
           type="text"
           placeholder="Search..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-48"
+          className="w-full sm:w-48"
         />
-        <input
+        <Input
           type="text"
           placeholder="Action"
           value={action}
           onChange={(e) => setAction(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-36"
+          className="w-full sm:w-36"
         />
-        <input
+        <Input
           type="text"
           placeholder="Resource type"
           value={resourceType}
           onChange={(e) => setResourceType(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full sm:w-36"
+          className="w-full sm:w-36"
         />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700"
-        >
+        <Button type="submit">
           Filter
-        </button>
+        </Button>
       </form>
 
       {isLoading && <div>Loading...</div>}
@@ -110,20 +109,20 @@ export function AuditPage() {
                 Page {pagination.page} of {pagination.totalPages} ({pagination.total} total)
               </p>
               <div className="flex gap-2">
-                <button
+                <Button
+                  variant="outline"
                   onClick={() => setPage((p) => p - 1)}
                   disabled={page === 1}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-40 hover:bg-gray-50"
                 >
                   Previous
-                </button>
-                <button
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => setPage((p) => p + 1)}
                   disabled={page >= pagination.totalPages}
-                  className="px-3 py-1 text-sm border border-gray-300 rounded disabled:opacity-40 hover:bg-gray-50"
                 >
                   Next
-                </button>
+                </Button>
               </div>
             </div>
           )}

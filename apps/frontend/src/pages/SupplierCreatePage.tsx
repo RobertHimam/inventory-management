@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { useCreateSupplier } from '../hooks/useSuppliers'
 import type { CreateSupplierDto } from '@inventory/shared-types'
 
@@ -39,7 +40,15 @@ export function SupplierCreatePage() {
       ...(values.phone ? { phone: values.phone } : {}),
       ...(values.address ? { address: values.address } : {}),
     }
-    createSupplier(dto, { onSuccess: () => navigate('/suppliers') })
+    createSupplier(dto, {
+      onSuccess: () => {
+        toast.success('Supplier created successfully')
+        navigate('/suppliers')
+      },
+      onError: () => {
+        toast.error('Failed to create supplier')
+      },
+    })
   }
 
   return (

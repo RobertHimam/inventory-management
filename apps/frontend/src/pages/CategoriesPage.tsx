@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useCategoryList, useDeleteCategory } from '../hooks/useCategories'
 import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
@@ -37,7 +38,10 @@ export function CategoriesPage() {
 
   function handleConfirmDelete() {
     if (deleteId) {
-      deleteCategory(deleteId)
+      deleteCategory(deleteId, {
+        onSuccess: () => toast.success('Category deleted successfully'),
+        onError: () => toast.error('Failed to delete category'),
+      })
       setDeleteId(null)
     }
   }

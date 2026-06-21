@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { useStockOut } from '../hooks/useInventory'
 
 const schema = z.object({
@@ -35,7 +36,15 @@ export function StockOutPage() {
   })
 
   function onSubmit(values: FormValues) {
-    stockOut({ productId: values.productId, quantity: values.quantity }, { onSuccess: () => navigate('/inventory') })
+    stockOut({ productId: values.productId, quantity: values.quantity }, {
+      onSuccess: () => {
+        toast.success('Stock out recorded successfully')
+        navigate('/inventory')
+      },
+      onError: () => {
+        toast.error('Failed to record stock out')
+      },
+    })
   }
 
   return (

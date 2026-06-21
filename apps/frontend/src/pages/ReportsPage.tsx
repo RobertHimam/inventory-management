@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
 import { useDashboardMetrics, useSalesReport, useInventoryValuation, useLowStockReport } from '../hooks/useReports'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 
 type Tab = 'dashboard' | 'sales' | 'valuation' | 'low-stock'
 
@@ -70,35 +72,29 @@ function SalesTab() {
       <div className="flex flex-wrap gap-3 items-end">
         <div>
           <label className="block text-xs text-gray-500 mb-1">Start Date</label>
-          <input
+          <Input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            className="w-auto"
           />
         </div>
         <div>
           <label className="block text-xs text-gray-500 mb-1">End Date</label>
-          <input
+          <Input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            className="w-auto"
           />
         </div>
-        <button
-          onClick={handleFilter}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
-        >
+        <Button onClick={handleFilter}>
           Apply Filter
-        </button>
+        </Button>
         {(startDate || endDate) && (
-          <button
-            onClick={handleClear}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
-          >
+          <Button variant="outline" onClick={handleClear}>
             Clear
-          </button>
+          </Button>
         )}
       </div>
 
@@ -278,6 +274,8 @@ export function ReportsPage() {
           {visibleTabs.map((tab) => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`pb-3 px-1 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                 activeTab === tab.id

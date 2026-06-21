@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useEffect } from 'react'
+import { toast } from 'sonner'
 import { useCategory, useUpdateCategory } from '../hooks/useCategories'
 import type { UpdateCategoryDto } from '@inventory/shared-types'
 
@@ -49,7 +50,15 @@ export function CategoryEditPage() {
       name: values.name,
       ...(values.description ? { description: values.description } : {}),
     }
-    updateCategory({ id, dto }, { onSuccess: () => navigate('/categories') })
+    updateCategory({ id, dto }, {
+      onSuccess: () => {
+        toast.success('Category updated successfully')
+        navigate('/categories')
+      },
+      onError: () => {
+        toast.error('Failed to update category')
+      },
+    })
   }
 
   return (

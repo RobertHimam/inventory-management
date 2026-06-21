@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Role } from '@inventory/shared-types'
+import { Toaster } from 'sonner'
 import { AppLayout } from './components/layout/AppLayout'
 import { AuthGuard } from './components/guards/AuthGuard'
 import { RoleGuard } from './components/guards/RoleGuard'
@@ -28,6 +29,7 @@ const ADMIN_ONLY = [Role.ADMIN]
 
 export default function App() {
   return (
+    <>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
 
@@ -161,5 +163,7 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    <Toaster />
+    </>
   )
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 import { useProductList, useDeleteProduct } from '../hooks/useProducts'
 import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
@@ -37,7 +38,10 @@ export function ProductsPage() {
 
   function handleConfirmDelete() {
     if (deleteId) {
-      deleteProduct(deleteId)
+      deleteProduct(deleteId, {
+        onSuccess: () => toast.success('Product deleted successfully'),
+        onError: () => toast.error('Failed to delete product'),
+      })
       setDeleteId(null)
     }
   }

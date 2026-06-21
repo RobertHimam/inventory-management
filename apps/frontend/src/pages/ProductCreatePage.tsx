@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { useCreateProduct } from '../hooks/useProducts'
 import type { CreateProductDto } from '@inventory/shared-types'
 
@@ -53,7 +54,15 @@ export function ProductCreatePage() {
       stockQuantity: values.stockQuantity,
       isActive: values.isActive,
     }
-    createProduct(dto, { onSuccess: () => navigate('/products') })
+    createProduct(dto, {
+      onSuccess: () => {
+        toast.success('Product created successfully')
+        navigate('/products')
+      },
+      onError: () => {
+        toast.error('Failed to create product')
+      },
+    })
   }
 
   return (

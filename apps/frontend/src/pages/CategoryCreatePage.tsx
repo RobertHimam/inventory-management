@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { toast } from 'sonner'
 import { useCreateCategory } from '../hooks/useCategories'
 import type { CreateCategoryDto } from '@inventory/shared-types'
 
@@ -35,7 +36,15 @@ export function CategoryCreatePage() {
       name: values.name,
       ...(values.description ? { description: values.description } : {}),
     }
-    createCategory(dto, { onSuccess: () => navigate('/categories') })
+    createCategory(dto, {
+      onSuccess: () => {
+        toast.success('Category created successfully')
+        navigate('/categories')
+      },
+      onError: () => {
+        toast.error('Failed to create category')
+      },
+    })
   }
 
   return (
