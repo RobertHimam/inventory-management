@@ -1,13 +1,15 @@
-import supertest, { SuperTest, Test } from 'supertest';
+import supertest from 'supertest';
 import type { Express } from 'express';
 import type { Db } from 'mongodb';
 
-export function setupSupertest(app: Express): SuperTest<Test> {
+type SupertestAgent = ReturnType<typeof supertest>;
+
+export function setupSupertest(app: Express): SupertestAgent {
   return supertest(app);
 }
 
 export interface TestAppSetup {
-  agent: SuperTest<Test>;
+  agent: SupertestAgent;
   db: Db;
   clearDB: () => Promise<void>;
 }
@@ -31,6 +33,6 @@ export async function createTestSetup(app: Express): Promise<TestAppSetup> {
   };
 }
 
-export function createCleanTestAgent(app: Express): SuperTest<Test> {
+export function createCleanTestAgent(app: Express): SupertestAgent {
   return supertest.agent(app);
 }
