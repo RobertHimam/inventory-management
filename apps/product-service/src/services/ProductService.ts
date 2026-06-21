@@ -1,12 +1,29 @@
 import { randomUUID } from 'crypto';
 import { IProductRepository } from '../repositories/interfaces/IProductRepository';
+import { IProduct } from '../models/product.model';
 import { CreateProductDto, UpdateProductDto, ListProductsQueryDto } from '../validation/product.validation';
 import { createProductSchema, updateProductSchema, listProductsQuerySchema } from '../validation/product.validation';
 import { ConflictError, DatabaseError, ValidationError, NotFoundError } from '../errors';
 import { EventBus } from '@inventory/shared-rabbitmq';
 import { Logger, createLogger } from '@inventory/shared-logger';
 import { createProductCreatedEvent, createProductUpdatedEvent, createProductDeletedEvent, createAuditLoggedEvent } from '@inventory/shared-events';
-import { AuditAction } from '@inventory/shared-types';
+import { AuditAction, Role } from '@inventory/shared-types';
+
+interface ServiceUser {
+  userId: string;
+  username?: string;
+  role: Role | string;
+}
+
+interface ListProductsResult {
+  data: IProduct[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
 
 export class ProductService {
   constructor(
@@ -15,7 +32,7 @@ export class ProductService {
     private readonly logger: Logger = createLogger()
   ) {}
 
-  async createProduct(dto: CreateProductDto, correlationId?: string, user?: any): Promise<any> {
+  async createProduct(dto: CreateProductDto, correlationId?: string, user?: ServiceUser): Promise<IProduct> {
     // 1. Validate DTO
     const validationResult = createProductSchema.safeParse(dto);
     if (!validationResult.success) {
@@ -90,7 +107,7 @@ export class ProductService {
     }
   }
 
-  async updateProduct(id: string, dto: UpdateProductDto, correlationId?: string, user?: any): Promise<any> {
+  async updateProduct(id: string, dto: UpdateProductDto, correlationId?: string, user?: ServiceUser): Promise<IProduct> {
     // 1. Validate DTO (allow partial)
     const validationResult = updateProductSchema.safeParse(dto);
     if (!validationResult.success) {
@@ -176,7 +193,7 @@ export class ProductService {
     }
   }
 
-  async deleteProduct(id: string, deletedBy: string, correlationId?: string, user?: any): Promise<any> {
+  async deleteProduct(id: string, deletedBy: string, correlationId?: string, user?: ServiceUser): Promise<IProduct> {
     const existing = await this.repository.findById(id);
     if (!existing) {
       throw new NotFoundError(`Product with ID '${id}' not found`);
@@ -238,7 +255,7 @@ export class ProductService {
     }
   }
 
-  async listProducts(query: Partial<ListProductsQueryDto>): Promise<any> {
+  async listProducts(query: Partial<ListProductsQueryDto>): Promise<ListProductsResult> {
     const validationResult = listProductsQuerySchema.safeParse(query);
     if (!validationResult.success) {
       throw new ValidationError(
@@ -266,7 +283,7 @@ export class ProductService {
     }
   }
 
-  async getProductDetail(id: string): Promise<any> {
+  async getProductDetail(id: string): Promise<IProduct> {
     try {
       const product = await this.repository.findById(id);
       if (!product) {

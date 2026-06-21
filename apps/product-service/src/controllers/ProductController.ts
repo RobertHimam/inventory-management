@@ -3,19 +3,17 @@ import { ProductService } from '../services/ProductService';
 import { CreateProductDto, UpdateProductDto } from '../validation/product.validation';
 import { ConflictError, ValidationError, NotFoundError } from '../errors';
 
+interface ExtendedRequest<P = Record<string, string>, B = unknown, Q = Record<string, string | undefined>> extends Request<P, unknown, B, Q> {
+  user?: { userId: string; username?: string; role: string };
+  correlationId?: string;
+}
+
 export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
-  async createProduct(req: Request<{}, {}, CreateProductDto>, res: Response): Promise<void> {
+  async createProduct(req: ExtendedRequest<Record<string, never>, CreateProductDto>, res: Response): Promise<void> {
     try {
-      const productData = req.body;
-      const correlationId = (req as any).correlationId;
-      const user = (req as any).user;
-      const product = user
-        ? await this.productService.createProduct(productData, correlationId, user)
-        : correlationId
-          ? await this.productService.createProduct(productData, correlationId)
-          : await this.productService.createProduct(productData);
+      const product = await this.productService.createProduct(req.body, req.correlationId, req.user);
 
       res.status(201).json({
         success: true,
@@ -36,17 +34,9 @@ export class ProductController {
     }
   }
 
-  async updateProduct(req: Request<{ id: string }, {}, UpdateProductDto>, res: Response): Promise<void> {
+  async updateProduct(req: ExtendedRequest<{ id: string }, UpdateProductDto>, res: Response): Promise<void> {
     try {
-      const productId = req.params.id;
-      const updateData = req.body;
-      const correlationId = (req as any).correlationId;
-      const user = (req as any).user;
-      const product = user
-        ? await this.productService.updateProduct(productId, updateData, correlationId, user)
-        : correlationId
-          ? await this.productService.updateProduct(productId, updateData, correlationId)
-          : await this.productService.updateProduct(productId, updateData);
+      const product = await this.productService.updateProduct(req.params.id, req.body, req.correlationId, req.user);
 
       res.status(200).json({
         success: true,
@@ -65,17 +55,10 @@ export class ProductController {
     }
   }
 
-  async deleteProduct(req: Request<{ id: string }>, res: Response): Promise<void> {
+  async deleteProduct(req: ExtendedRequest<{ id: string }>, res: Response): Promise<void> {
     try {
-      const productId = req.params.id;
-      const user = (req as any).user;
-      const deletedBy = user?.userId || 'unknown';
-      const correlationId = (req as any).correlationId;
-      const product = user
-        ? await this.productService.deleteProduct(productId, deletedBy, correlationId, user)
-        : correlationId
-          ? await this.productService.deleteProduct(productId, deletedBy, correlationId)
-          : await this.productService.deleteProduct(productId, deletedBy);
+      const deletedBy = req.user?.userId ?? 'unknown';
+      const product = await this.productService.deleteProduct(req.params.id, deletedBy, req.correlationId, req.user);
 
       res.status(200).json({
         success: true,
@@ -90,10 +73,9 @@ export class ProductController {
     }
   }
 
-  async listProducts(req: Request<{}, {}, {}, any>, res: Response): Promise<void> {
+  async listProducts(req: ExtendedRequest, res: Response): Promise<void> {
     try {
-      const query = req.query;
-      const result = await this.productService.listProducts(query);
+      const result = await this.productService.listProducts(req.query);
 
       res.status(200).json({
         success: true,

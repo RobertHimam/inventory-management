@@ -115,8 +115,6 @@ describe('PUT /api/v1/products/:id', () => {
     };
     const res1 = await request(app).post('/api/v1/products').send(product1);
     expect(res1.status).toBe(201);
-    const id1 = res1.body.data._id;
-
     const res2 = await request(app).post('/api/v1/products').send(product2);
     expect(res2.status).toBe(201);
     const id2 = res2.body.data._id;

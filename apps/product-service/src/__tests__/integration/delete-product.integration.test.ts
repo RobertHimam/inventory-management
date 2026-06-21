@@ -38,7 +38,7 @@ beforeAll(async () => {
   app.post('/api/v1/products', (req, res, next) => productController.createProduct(req, res, next));
   app.delete('/api/v1/products/:id', (req, res, next) => {
     (req as any).user = { userId: 'test-admin-id', role: 'ADMIN' };
-    productController.deleteProduct(req, res, next);
+    void productController.deleteProduct(req, res, next);
   });
   
   app.use(errorMiddleware);
