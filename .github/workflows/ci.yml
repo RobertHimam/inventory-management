@@ -68,7 +68,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Run tests with coverage
-        run: pnpm test:coverage -- --runInBand
+        run: pnpm exec jest --coverage --runInBand
         env:
           NODE_ENV: test
           CI: true
