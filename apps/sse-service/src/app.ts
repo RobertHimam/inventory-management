@@ -50,6 +50,10 @@ export function createApp(sseService: SSEService, jwtSecret: string): Applicatio
     next();
   };
 
+  app.get('/health', (_req: Request, res: Response) => {
+    res.json({ status: 'ok', service: 'sse-service' });
+  });
+
   app.get('/events', sseAuthenticate, (req: Request, res: Response) => {
     const user = (req as AuthenticatedRequest).user;
     if (!user) {
