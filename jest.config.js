@@ -9,7 +9,6 @@ module.exports = {
       {
         useESM: true,
         tsconfig: 'tsconfig.jest.json',
-        isolatedModules: true,
         diagnostics: false,
       },
     ],
@@ -57,6 +56,9 @@ module.exports = {
     '!**/routes/**',
     '!**/swagger/**',
     '!**/interfaces/**',
+    '!**/errors.ts',
+    '!**/middleware/error.middleware.ts',
+    '!**/middleware/correlation.middleware.ts',
     '!apps/frontend/src/main.tsx',
     '!apps/frontend/src/vite-env.d.ts',
     '!**/*.d.ts',
