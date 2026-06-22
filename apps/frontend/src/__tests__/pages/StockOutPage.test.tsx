@@ -22,6 +22,13 @@ jest.mock('../../hooks/useInventory', () => ({
   useStockOut: () => mockUseStockOut(),
 }))
 
+jest.mock('../../hooks/useProducts', () => ({
+  useProductList: () => ({
+    data: { data: [{ _id: 'prod-1', name: 'Test Product', sku: 'TEST-1' }] },
+    isLoading: false,
+  }),
+}))
+
 function renderPage() {
   return render(
     <MemoryRouter>
@@ -46,7 +53,7 @@ describe('StockOutPage', () => {
 
   it('renders productId and quantity fields', () => {
     renderPage()
-    expect(screen.getByLabelText(/product id/i)).toBeInTheDocument()
+    expect(screen.getByLabelText('Product')).toBeInTheDocument()
     expect(screen.getByLabelText(/quantity/i)).toBeInTheDocument()
   })
 
@@ -66,7 +73,7 @@ describe('StockOutPage', () => {
 
   it('shows quantity validation error for zero value', async () => {
     renderPage()
-    await userEvent.type(screen.getByLabelText(/product id/i), 'prod-1')
+    await userEvent.selectOptions(screen.getByLabelText('Product'), 'prod-1')
     await userEvent.type(screen.getByLabelText(/quantity/i), '0')
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     await waitFor(() => {
@@ -77,7 +84,7 @@ describe('StockOutPage', () => {
   it('calls stockOut with form data on valid submit', async () => {
     mockStockOut.mockImplementation((_dto: unknown, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
     renderPage()
-    await userEvent.type(screen.getByLabelText(/product id/i), 'prod-1')
+    await userEvent.selectOptions(screen.getByLabelText('Product'), 'prod-1')
     await userEvent.type(screen.getByLabelText(/quantity/i), '5')
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     await waitFor(() => {
@@ -91,7 +98,7 @@ describe('StockOutPage', () => {
   it('navigates to /inventory on successful submit', async () => {
     mockStockOut.mockImplementation((_dto: unknown, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
     renderPage()
-    await userEvent.type(screen.getByLabelText(/product id/i), 'prod-1')
+    await userEvent.selectOptions(screen.getByLabelText('Product'), 'prod-1')
     await userEvent.type(screen.getByLabelText(/quantity/i), '5')
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     await waitFor(() => {
@@ -125,7 +132,7 @@ describe('StockOutPage', () => {
   it('shows success toast on successful submit', async () => {
     mockStockOut.mockImplementation((_dto: unknown, opts: { onSuccess?: () => void }) => opts?.onSuccess?.())
     renderPage()
-    await userEvent.type(screen.getByLabelText(/product id/i), 'prod-1')
+    await userEvent.selectOptions(screen.getByLabelText('Product'), 'prod-1')
     await userEvent.type(screen.getByLabelText(/quantity/i), '5')
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     await waitFor(() => {
@@ -136,7 +143,7 @@ describe('StockOutPage', () => {
   it('shows error toast when submit fails', async () => {
     mockStockOut.mockImplementation((_dto: unknown, opts: { onError?: (e: Error) => void }) => opts?.onError?.(new Error('Server error')))
     renderPage()
-    await userEvent.type(screen.getByLabelText(/product id/i), 'prod-1')
+    await userEvent.selectOptions(screen.getByLabelText('Product'), 'prod-1')
     await userEvent.type(screen.getByLabelText(/quantity/i), '5')
     fireEvent.click(screen.getByRole('button', { name: /submit/i }))
     await waitFor(() => {

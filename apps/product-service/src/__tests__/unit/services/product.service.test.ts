@@ -161,6 +161,7 @@ describe('ProductService', () => {
         sku: 'TEST123',
         categoryId: 'Electronics',
         price: 99.99,
+        stockQuantity: 10,
       }, 'test-correlation-id');
     });
 

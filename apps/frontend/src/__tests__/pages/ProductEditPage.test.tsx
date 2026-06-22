@@ -23,6 +23,13 @@ jest.mock('../../hooks/useProducts', () => ({
   useUpdateProduct: () => mockUseUpdateProduct(),
 }))
 
+jest.mock('../../hooks/useCategories', () => ({
+  useCategoryList: () => ({
+    data: { data: [{ _id: 'cat-1', name: 'Electronics' }] },
+    isLoading: false,
+  }),
+}))
+
 const PRODUCT = {
   _id: 'p1',
   name: 'Widget A',

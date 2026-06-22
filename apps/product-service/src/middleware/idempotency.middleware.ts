@@ -59,9 +59,11 @@ export const idempotency = async (req: Request, res: Response, next: NextFunctio
             responseCode: statusCode,
             responseBody: body,
           }
-        ).catch((_err) => {});
+        // eslint-disable-next-line no-console
+        ).catch((err) => { console.error('Failed to update idempotency record', err); });
       } else {
-        IdempotencyKey.deleteOne({ key: keyStr }).catch((_err) => {});
+        // eslint-disable-next-line no-console
+        IdempotencyKey.deleteOne({ key: keyStr }).catch((err) => { console.error('Failed to delete idempotency record', err); });
       }
 
       return originalJson.call(this, body);

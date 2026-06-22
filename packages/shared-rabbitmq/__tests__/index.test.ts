@@ -74,7 +74,7 @@ describe('EventBus', () => {
     const stubConn = {
       getChannel: () => mockChannel,
     } as any;
-    bus = new EventBus(stubConn, 'test.exchange');
+    bus = new EventBus(stubConn, 'test.exchange', 'svc');
   });
 
   it('publish sends message to exchange with routing key', async () => {
@@ -107,12 +107,12 @@ describe('EventBus', () => {
     });
     expect(mockChannel.assertQueue).toHaveBeenNthCalledWith(
       1,
-      'test.exchange.ProductCreated.queue.dlq',
+      'test.exchange.ProductCreated.svc.queue.dlq',
       { durable: true }
     );
     expect(mockChannel.bindQueue).toHaveBeenNthCalledWith(
       1,
-      'test.exchange.ProductCreated.queue.dlq',
+      'test.exchange.ProductCreated.svc.queue.dlq',
       'test.exchange.dlx',
       ''
     );
@@ -122,7 +122,7 @@ describe('EventBus', () => {
     });
     expect(mockChannel.assertQueue).toHaveBeenNthCalledWith(
       2,
-      'test.exchange.ProductCreated.queue',
+      'test.exchange.ProductCreated.svc.queue',
       {
         durable: true,
         arguments: {
@@ -133,12 +133,12 @@ describe('EventBus', () => {
     );
     expect(mockChannel.bindQueue).toHaveBeenNthCalledWith(
       2,
-      'test.exchange.ProductCreated.queue',
+      'test.exchange.ProductCreated.svc.queue',
       'test.exchange',
       'ProductCreated'
     );
     expect(mockChannel.consume).toHaveBeenCalledWith(
-      'test.exchange.ProductCreated.queue',
+      'test.exchange.ProductCreated.svc.queue',
       expect.any(Function)
     );
   });
@@ -209,7 +209,7 @@ describe('EventBus', () => {
     expect(consoleSpy).toHaveBeenCalledWith(
       'Malformed JSON in message',
       expect.objectContaining({
-        queue: 'test.exchange.TestEvent.queue',
+        queue: 'test.exchange.TestEvent.svc.queue',
         error: expect.any(SyntaxError),
         content: badContent,
       })

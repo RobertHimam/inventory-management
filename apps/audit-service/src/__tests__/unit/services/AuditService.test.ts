@@ -95,11 +95,11 @@ describe('AuditService', () => {
     it('should throw error if required field is missing', async () => {
       const payload = {
         userId: 'user-1',
-        // username is missing
+        username: 'testuser',
         role: Role.ADMIN,
         action: AuditAction.CREATE,
         resourceType: 'Product',
-        resourceId: 'prod-1',
+        // resourceId is missing
       };
 
       await expect(service.handleAuditEvent(payload, {}, 'cid-123')).rejects.toThrow();

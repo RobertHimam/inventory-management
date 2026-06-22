@@ -57,7 +57,7 @@ describe('ProductController', () => {
 
       await controller.createProduct(req, res);
 
-      expect(mockService.createProduct).toHaveBeenCalledWith(dto);
+      expect(mockService.createProduct).toHaveBeenCalledWith(dto, undefined, undefined);
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
@@ -83,7 +83,7 @@ describe('ProductController', () => {
 
       await controller.createProduct(req, res);
 
-      expect(mockService.createProduct).toHaveBeenCalledWith(invalidData);
+      expect(mockService.createProduct).toHaveBeenCalledWith(invalidData, undefined, undefined);
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
@@ -110,7 +110,7 @@ describe('ProductController', () => {
 
       await controller.createProduct(req, res);
 
-      expect(mockService.createProduct).toHaveBeenCalledWith(dto);
+      expect(mockService.createProduct).toHaveBeenCalledWith(dto, undefined, undefined);
       expect(res.status).toHaveBeenCalledWith(409);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
@@ -135,7 +135,7 @@ describe('ProductController', () => {
 
       await controller.createProduct(req, res);
 
-      expect(mockService.createProduct).toHaveBeenCalledWith(dto);
+      expect(mockService.createProduct).toHaveBeenCalledWith(dto, undefined, undefined);
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({
         success: false,
@@ -156,7 +156,7 @@ describe('ProductController', () => {
 
       await controller.updateProduct(req, res);
 
-      expect(mockService.updateProduct).toHaveBeenCalledWith(productId, updateDto);
+      expect(mockService.updateProduct).toHaveBeenCalledWith(productId, updateDto, undefined, undefined);
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({
         success: true,
@@ -269,7 +269,7 @@ describe('ProductController', () => {
 
       await controller.deleteProduct(req, res);
 
-      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'unknown');
+      expect(mockService.deleteProduct).toHaveBeenCalledWith(productId, 'unknown', undefined, undefined);
       expect(res.status).toHaveBeenCalledWith(200);
     });
 

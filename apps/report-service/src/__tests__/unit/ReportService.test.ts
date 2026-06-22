@@ -40,14 +40,10 @@ describe('ReportService Unit Tests', () => {
   describe('Product Read Model (Events)', () => {
     it('should create product in read model on product.created', async () => {
       const payload = {
-        product: {
-          id: 'prod-1',
-          name: 'Premium Widget',
-          sku: 'WID-PREM',
-          price: 150,
-          cost: 100,
-          reorderLevel: 5,
-        },
+        productId: 'prod-1',
+        name: 'Premium Widget',
+        sku: 'WID-PREM',
+        price: 150,
       };
 
       await service.handleProductCreated(payload);
@@ -70,14 +66,10 @@ describe('ReportService Unit Tests', () => {
       });
 
       const payload = {
-        product: {
-          id: 'prod-1',
-          name: 'Updated Premium Widget',
-          sku: 'WID-PREM',
-          price: 150,
-          cost: 100,
-          reorderLevel: 5,
-        },
+        productId: 'prod-1',
+        name: 'Updated Premium Widget',
+        sku: 'WID-PREM',
+        price: 150,
       };
 
       await service.handleProductUpdated(payload);
