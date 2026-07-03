@@ -62,7 +62,9 @@ export class ProductService {
           sku: product.sku,
           categoryId: product.category,
           price: product.price,
+          cost: product.cost,
           stockQuantity: product.stockQuantity,
+          reorderLevel: product.reorderLevel,
         });
         try {
           await this.eventBus.publish(event.type, event.payload, event.correlationId);
@@ -148,6 +150,8 @@ export class ProductService {
           sku: product.sku,
           categoryId: product.category,
           price: product.price,
+          cost: product.cost,
+          reorderLevel: product.reorderLevel,
           isActive: product.isActive,
         });
         try {

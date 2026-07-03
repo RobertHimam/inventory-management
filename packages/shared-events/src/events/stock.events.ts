@@ -5,13 +5,19 @@ import { z } from 'zod';
 export interface StockInCreatedPayload {
   stockInId: string;
   productId: string;
+  productName?: string;
   quantity: number;
+  userId?: string;
+  userEmail?: string;
 }
 
 export const stockInCreatedSchema = z.object({
   stockInId: z.string(),
   productId: z.string(),
+  productName: z.string().optional(),
   quantity: z.number().int().positive(),
+  userId: z.string().optional(),
+  userEmail: z.string().optional(),
 });
 
 export function createStockInCreatedEvent(
@@ -30,8 +36,10 @@ export function createStockInCreatedEvent(
 export interface StockOutCreatedPayload {
   stockOutId: string;
   productId: string;
+  productName?: string;
   quantity: number;
   userId?: string;
+  userEmail?: string;
 }
 
 export function createStockOutCreatedEvent(
@@ -49,6 +57,7 @@ export function createStockOutCreatedEvent(
 
 export interface LowStockDetectedPayload {
   productId: string;
+  productName?: string;
   currentQuantity: number;
   reorderLevel: number;
   timestamp: Date;

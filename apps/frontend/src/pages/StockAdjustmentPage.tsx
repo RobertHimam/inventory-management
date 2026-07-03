@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
@@ -7,6 +7,12 @@ import { useStockAdjust } from '../hooks/useInventory'
 import { useProductList } from '../hooks/useProducts'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { SecondaryButton } from '@/components/ui/SecondaryButton'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Combobox } from '@/components/ui/Combobox'
+import { fieldClass } from '@/lib/fieldClass'
 
 const schema = z.object({
   productId: z.string().min(1, 'Product ID is required').trim(),
@@ -31,12 +37,15 @@ export function StockAdjustmentPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { quantity: 0 },
+    defaultValues: { productId: '', quantity: 0 },
   })
+
+  const productOptions = (productsData?.data ?? []).map((p) => ({ value: p._id, label: `${p.name} (${p.sku})` }))
 
   function onSubmit(values: FormValues) {
     stockAdjust(
@@ -54,71 +63,69 @@ export function StockAdjustmentPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-md">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Stock Adjustment</h1>
+    <div className="mx-auto w-full max-w-lg px-4 py-6 sm:px-6">
+      <PageHeader title="Stock Adjustment" />
 
       {isError && (
-        <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+        <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {getErrorMessage(error)}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label htmlFor="productId" className="block text-sm font-medium text-gray-700 mb-1">
-            Product
-          </label>
-          <select
-            id="productId"
-            {...register('productId')}
-            disabled={productsLoading}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white disabled:bg-gray-100"
-          >
-            <option value="">Select a product</option>
-            {productsData?.data.map((p) => (
-              <option key={p._id} value={p._id}>
-                {p.name} ({p.sku})
-              </option>
-            ))}
-          </select>
-          {errors.productId && <p className="mt-1 text-xs text-red-600">{errors.productId.message}</p>}
-        </div>
+      <Card>
+        <CardContent className="p-4 sm:p-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <Label htmlFor="productId" className="mb-1.5 block">
+                Product
+              </Label>
+              <Controller
+                name="productId"
+                control={control}
+                render={({ field }) => (
+                  <Combobox
+                    id="productId"
+                    aria-label="Product"
+                    options={productOptions}
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Select a product"
+                    searchPlaceholder="Search products..."
+                    emptyText="No products found."
+                    disabled={productsLoading}
+                  />
+                )}
+              />
+              {errors.productId && <p className="mt-1 text-xs text-red-600">{errors.productId.message}</p>}
+            </div>
 
-        <div>
-          <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
-            Quantity (positive to add, negative to remove)
-          </label>
-          <input
-            id="quantity"
-            type="number"
-            {...register('quantity', { valueAsNumber: true })}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.quantity && <p className="mt-1 text-xs text-red-600">{errors.quantity.message}</p>}
-        </div>
+            <div>
+              <Label htmlFor="quantity" className="mb-1.5 block">
+                Quantity (positive to add, negative to remove)
+              </Label>
+              <Input id="quantity" type="number" {...register('quantity', { valueAsNumber: true })} />
+              {errors.quantity && <p className="mt-1 text-xs text-red-600">{errors.quantity.message}</p>}
+            </div>
 
-        <div>
-          <label htmlFor="reason" className="block text-sm font-medium text-gray-700 mb-1">
-            Reason
-          </label>
-          <textarea
-            id="reason"
-            {...register('reason')}
-            rows={3}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.reason && <p className="mt-1 text-xs text-red-600">{errors.reason.message}</p>}
-        </div>
+            <div>
+              <Label htmlFor="reason" className="mb-1.5 block">
+                Reason
+              </Label>
+              <textarea id="reason" rows={3} {...register('reason')} className={fieldClass} />
+              {errors.reason && <p className="mt-1 text-xs text-red-600">{errors.reason.message}</p>}
+            </div>
 
-        <div className="flex gap-3 pt-2">
-          <PrimaryButton type="submit" disabled={isPending}>
-            {isPending ? 'Submitting...' : 'Submit'}
-          </PrimaryButton>
-          <SecondaryButton type="button" onClick={() => navigate('/inventory')}>
-            Cancel
-          </SecondaryButton>
-        </div>
-      </form>
+            <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
+              <SecondaryButton type="button" onClick={() => navigate('/inventory')} className="w-full sm:w-auto">
+                Cancel
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={isPending} className="w-full sm:w-auto">
+                {isPending ? 'Submitting...' : 'Submit'}
+              </PrimaryButton>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

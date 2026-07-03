@@ -6,6 +6,9 @@ import { Role } from '@inventory/shared-types'
 import { Button } from '@/components/ui/button'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { SecondaryButton } from '@/components/ui/SecondaryButton'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Card } from '@/components/ui/card'
+import { EmptyState } from '@/components/ui/EmptyState'
 import { Input } from '@/components/ui/input'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
@@ -38,23 +41,18 @@ export function InventoryPage() {
   const pagination = data?.pagination
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-y-3 mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Inventory</h1>
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+      <PageHeader title="Inventory">
         {isAdmin && (
-          <div className="flex flex-wrap gap-2">
-            <PrimaryButton onClick={() => navigate('/inventory/stock-in')}>
-              Stock In
-            </PrimaryButton>
+          <>
+            <PrimaryButton onClick={() => navigate('/inventory/stock-in')}>Stock In</PrimaryButton>
             <Button variant="destructive" onClick={() => navigate('/inventory/stock-out')}>
               Stock Out
             </Button>
-            <SecondaryButton onClick={() => navigate('/inventory/adjustment')}>
-              Adjust
-            </SecondaryButton>
-          </div>
+            <SecondaryButton onClick={() => navigate('/inventory/adjustment')}>Adjust</SecondaryButton>
+          </>
         )}
-      </div>
+      </PageHeader>
 
       <div className="mb-4">
         <Input
@@ -68,7 +66,7 @@ export function InventoryPage() {
         />
       </div>
 
-      {isLoading && <p className="text-gray-500">Loading...</p>}
+      {isLoading && <p className="text-slate-500">Loading...</p>}
 
       {isError && (
         <p role="alert" className="text-red-600">
@@ -77,38 +75,46 @@ export function InventoryPage() {
       )}
 
       {!isLoading && !isError && (
-        <Table aria-label="Inventory">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Product Name</TableHead>
-              <TableHead>SKU</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Reorder Level</TableHead>
-              <TableHead>Last Updated</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((item) => (
-              <TableRow key={item.productId}>
-                <TableCell>{item.productName ?? item.productId}</TableCell>
-                <TableCell className="text-muted-foreground">{item.sku ?? '—'}</TableCell>
-                <TableCell>{item.quantity}</TableCell>
-                <TableCell className="text-muted-foreground">{item.reorderLevel ?? '—'}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {new Date(item.updatedAt).toLocaleDateString()}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <Card className="overflow-hidden">
+          <div className="overflow-x-auto">
+            <Table aria-label="Inventory">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Product Name</TableHead>
+                  <TableHead>SKU</TableHead>
+                  <TableHead>Quantity</TableHead>
+                  <TableHead>Reorder Level</TableHead>
+                  <TableHead>Last Updated</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.length === 0 ? (
+                  <EmptyState message="No inventory items found" colSpan={5} />
+                ) : (
+                  items.map((item) => (
+                    <TableRow key={item.productId}>
+                      <TableCell className="font-medium">{item.productName ?? item.productId}</TableCell>
+                      <TableCell className="text-muted-foreground">{item.sku ?? '—'}</TableCell>
+                      <TableCell>{item.quantity}</TableCell>
+                      <TableCell className="text-muted-foreground">{item.reorderLevel ?? '—'}</TableCell>
+                      <TableCell className="text-muted-foreground whitespace-nowrap">
+                        {new Date(item.updatedAt).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
       )}
 
       {pagination && (
-        <div className="flex items-center justify-between mt-4">
+        <div className="mt-4 flex items-center justify-between">
           <SecondaryButton size="sm" onClick={() => setPage((p) => p - 1)} disabled={page <= 1}>
             Previous
           </SecondaryButton>
-          <span className="text-sm text-gray-600">
+          <span className="text-sm text-slate-600">
             Page {page} of {pagination.totalPages}
           </span>
           <SecondaryButton size="sm" onClick={() => setPage((p) => p + 1)} disabled={page >= pagination.totalPages}>

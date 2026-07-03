@@ -1,10 +1,14 @@
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 import { useAuthStore } from '../store/authStore'
 import { Role } from '@inventory/shared-types'
 import { useDashboardMetrics, useSalesReport, useInventoryValuation, useLowStockReport } from '../hooks/useReports'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { SecondaryButton } from '@/components/ui/SecondaryButton'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table'
 
 type Tab = 'dashboard' | 'sales' | 'valuation' | 'low-stock'
@@ -18,7 +22,24 @@ function SectionError() {
 }
 
 function SectionLoading() {
-  return <p className="text-gray-500 text-sm">Loading...</p>
+  return <p className="text-slate-500 text-sm">Loading...</p>
+}
+
+function MetricCard({ label, value, valueClass = 'text-slate-900' }: { label: string; value: ReactNode; valueClass?: string }) {
+  return (
+    <Card className="p-5">
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className={`mt-2 text-2xl font-bold sm:text-3xl ${valueClass}`}>{value}</p>
+    </Card>
+  )
+}
+
+function TableCard({ children }: { children: ReactNode }) {
+  return (
+    <Card className="overflow-hidden">
+      <div className="overflow-x-auto">{children}</div>
+    </Card>
+  )
 }
 
 function DashboardTab() {
@@ -30,19 +51,10 @@ function DashboardTab() {
   const metrics = data?.data
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-        <p className="text-sm font-medium text-gray-500">Total Products</p>
-        <p className="mt-2 text-3xl font-bold text-gray-900">{metrics?.totalProducts ?? 0}</p>
-      </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-        <p className="text-sm font-medium text-gray-500">Inventory Value</p>
-        <p className="mt-2 text-3xl font-bold text-gray-900">{formatCurrency(metrics?.totalInventoryValue ?? 0)}</p>
-      </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-        <p className="text-sm font-medium text-gray-500">Low Stock Items</p>
-        <p className="mt-2 text-3xl font-bold text-red-600">{metrics?.lowStockCount ?? 0}</p>
-      </div>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <MetricCard label="Total Products" value={metrics?.totalProducts ?? 0} />
+      <MetricCard label="Inventory Value" value={formatCurrency(metrics?.totalInventoryValue ?? 0)} />
+      <MetricCard label="Low Stock Items" value={metrics?.lowStockCount ?? 0} valueClass="text-red-600" />
     </div>
   )
 }
@@ -71,10 +83,13 @@ function SalesTab() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap gap-3 items-end">
+      <div className="flex flex-wrap items-end gap-3">
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Start Date</label>
+          <Label htmlFor="startDate" className="mb-1 block text-xs text-slate-500">
+            Start Date
+          </Label>
           <Input
+            id="startDate"
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
@@ -82,22 +97,19 @@ function SalesTab() {
           />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">End Date</label>
+          <Label htmlFor="endDate" className="mb-1 block text-xs text-slate-500">
+            End Date
+          </Label>
           <Input
+            id="endDate"
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
             className="w-auto"
           />
         </div>
-        <PrimaryButton onClick={handleFilter}>
-          Apply Filter
-        </PrimaryButton>
-        {(startDate || endDate) && (
-          <SecondaryButton onClick={handleClear}>
-            Clear
-          </SecondaryButton>
-        )}
+        <PrimaryButton onClick={handleFilter}>Apply Filter</PrimaryButton>
+        {(startDate || endDate) && <SecondaryButton onClick={handleClear}>Clear</SecondaryButton>}
       </div>
 
       {isLoading && <SectionLoading />}
@@ -105,45 +117,41 @@ function SalesTab() {
 
       {report && (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-              <p className="text-sm text-gray-500">Total Sales Amount</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">{formatCurrency(report.totalSalesAmount)}</p>
-            </div>
-            <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-              <p className="text-sm text-gray-500">Total Quantity Sold</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">{report.totalQuantitySold}</p>
-            </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <MetricCard label="Total Sales Amount" value={formatCurrency(report.totalSalesAmount)} />
+            <MetricCard label="Total Quantity Sold" value={report.totalQuantitySold} />
           </div>
 
-          <Table className="rounded-lg border border-gray-200 shadow-sm">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead className="text-right">Qty</TableHead>
-                <TableHead className="text-right">Unit Price</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {report.sales.length === 0 ? (
+          <TableCard>
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">No sales records found.</TableCell>
+                  <TableHead>Product</TableHead>
+                  <TableHead className="text-right">Qty</TableHead>
+                  <TableHead className="text-right">Unit Price</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead>Date</TableHead>
                 </TableRow>
-              ) : (
-                report.sales.map((sale, i) => (
-                  <TableRow key={i}>
-                    <TableCell>{sale.productName}</TableCell>
-                    <TableCell className="text-right">{sale.quantity}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(sale.price)}</TableCell>
-                    <TableCell className="text-right font-medium">{formatCurrency(sale.totalAmount)}</TableCell>
-                    <TableCell className="text-muted-foreground">{new Date(sale.createdAt).toLocaleDateString()}</TableCell>
+              </TableHeader>
+              <TableBody>
+                {report.sales.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-6 text-center text-muted-foreground">No sales records found.</TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  report.sales.map((sale, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="font-medium">{sale.productName}</TableCell>
+                      <TableCell className="text-right">{sale.quantity}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(sale.price)}</TableCell>
+                      <TableCell className="text-right font-medium">{formatCurrency(sale.totalAmount)}</TableCell>
+                      <TableCell className="text-muted-foreground whitespace-nowrap">{new Date(sale.createdAt).toLocaleDateString()}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </TableCard>
         </>
       )}
     </div>
@@ -160,49 +168,45 @@ function ValuationTab() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-          <p className="text-sm text-gray-500">Total Cost Valuation</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">{formatCurrency(report?.totalCostValuation ?? 0)}</p>
-        </div>
-        <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
-          <p className="text-sm text-gray-500">Total Retail Valuation</p>
-          <p className="mt-1 text-2xl font-bold text-gray-900">{formatCurrency(report?.totalRetailValuation ?? 0)}</p>
-        </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <MetricCard label="Total Cost Valuation" value={formatCurrency(report?.totalCostValuation ?? 0)} />
+        <MetricCard label="Total Retail Valuation" value={formatCurrency(report?.totalRetailValuation ?? 0)} />
       </div>
 
-      <Table className="rounded-lg border border-gray-200 shadow-sm">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Product</TableHead>
-            <TableHead>SKU</TableHead>
-            <TableHead className="text-right">Qty</TableHead>
-            <TableHead className="text-right">Cost</TableHead>
-            <TableHead className="text-right">Price</TableHead>
-            <TableHead className="text-right">Cost Val.</TableHead>
-            <TableHead className="text-right">Retail Val.</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {!report?.valuations?.length ? (
+      <TableCard>
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={7} className="py-6 text-center text-muted-foreground">No inventory data found.</TableCell>
+              <TableHead>Product</TableHead>
+              <TableHead>SKU</TableHead>
+              <TableHead className="text-right">Qty</TableHead>
+              <TableHead className="text-right">Cost</TableHead>
+              <TableHead className="text-right">Price</TableHead>
+              <TableHead className="text-right">Cost Val.</TableHead>
+              <TableHead className="text-right">Retail Val.</TableHead>
             </TableRow>
-          ) : (
-            report.valuations.map((item) => (
-              <TableRow key={item.productId}>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell className="text-muted-foreground">{item.sku}</TableCell>
-                <TableCell className="text-right">{item.quantity}</TableCell>
-                <TableCell className="text-right">{formatCurrency(item.cost)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(item.costValuation)}</TableCell>
-                <TableCell className="text-right font-medium">{formatCurrency(item.retailValuation)}</TableCell>
+          </TableHeader>
+          <TableBody>
+            {!report?.valuations?.length ? (
+              <TableRow>
+                <TableCell colSpan={7} className="py-6 text-center text-muted-foreground">No inventory data found.</TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              report.valuations.map((item) => (
+                <TableRow key={item.productId}>
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell className="text-muted-foreground">{item.sku}</TableCell>
+                  <TableCell className="text-right">{item.quantity}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(item.cost)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(item.price)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(item.costValuation)}</TableCell>
+                  <TableCell className="text-right font-medium">{formatCurrency(item.retailValuation)}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableCard>
     </div>
   )
 }
@@ -216,34 +220,36 @@ function LowStockTab() {
   const items = data?.data?.lowStockItems ?? []
 
   return (
-    <Table className="rounded-lg border border-gray-200 shadow-sm">
-      <TableHeader>
-        <TableRow>
-          <TableHead>Product</TableHead>
-          <TableHead>SKU</TableHead>
-          <TableHead className="text-right">Current Qty</TableHead>
-          <TableHead className="text-right">Reorder Level</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {items.length === 0 ? (
+    <TableCard>
+      <Table>
+        <TableHeader>
           <TableRow>
-            <TableCell colSpan={4} className="py-6 text-center text-muted-foreground">No low stock items.</TableCell>
+            <TableHead>Product</TableHead>
+            <TableHead>SKU</TableHead>
+            <TableHead className="text-right">Current Qty</TableHead>
+            <TableHead className="text-right">Reorder Level</TableHead>
           </TableRow>
-        ) : (
-          items.map((item) => (
-            <TableRow key={item.productId}>
-              <TableCell className="font-medium">{item.name}</TableCell>
-              <TableCell className="text-muted-foreground">{item.sku}</TableCell>
-              <TableCell className="text-right">
-                <span className="font-medium text-red-600">{item.quantity}</span>
-              </TableCell>
-              <TableCell className="text-right text-muted-foreground">{item.reorderLevel}</TableCell>
+        </TableHeader>
+        <TableBody>
+          {items.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={4} className="py-6 text-center text-muted-foreground">No low stock items.</TableCell>
             </TableRow>
-          ))
-        )}
-      </TableBody>
-    </Table>
+          ) : (
+            items.map((item) => (
+              <TableRow key={item.productId}>
+                <TableCell className="font-medium">{item.name}</TableCell>
+                <TableCell className="text-muted-foreground">{item.sku}</TableCell>
+                <TableCell className="text-right">
+                  <span className="font-medium text-red-600">{item.quantity}</span>
+                </TableCell>
+                <TableCell className="text-right text-muted-foreground">{item.reorderLevel}</TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </TableCard>
   )
 }
 
@@ -262,10 +268,10 @@ export function ReportsPage() {
   const [activeTab, setActiveTab] = useState<Tab>(visibleTabs[0].id)
 
   return (
-    <div className="p-4 sm:p-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Reports</h1>
+    <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
+      <PageHeader title="Reports" />
 
-      <div className="border-b border-gray-200 mb-6">
+      <div className="mb-6 border-b border-slate-200">
         <nav className="flex gap-4 overflow-x-auto" aria-label="Report tabs">
           {visibleTabs.map((tab) => (
             <button
@@ -273,10 +279,10 @@ export function ReportsPage() {
               role="tab"
               aria-selected={activeTab === tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`pb-3 px-1 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+              className={`whitespace-nowrap border-b-2 px-1 pb-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-accent-600 text-accent-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700'
               }`}
             >
               {tab.label}

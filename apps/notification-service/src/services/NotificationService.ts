@@ -23,7 +23,7 @@ export class NotificationService {
     return result;
   }
 
-  // CORE NOTIFICATION DISPATCHER WITH RETRY LOGIC
+  // Render a template by key, then dispatch. Used for templated notifications (welcome).
   private async sendNotificationWithRetry(
     userId: string | undefined | null,
     type: string,
@@ -38,7 +38,18 @@ export class NotificationService {
 
     const subject = this.render(template.subject, variables);
     const body = this.render(template.body, variables);
+    return this.dispatch(userId, type, recipient, subject, body);
+  }
 
+  // CORE NOTIFICATION DISPATCHER WITH RETRY LOGIC — persists with the given
+  // pre-rendered subject/body (so callers can build human, name-based messages).
+  private async dispatch(
+    userId: string | undefined | null,
+    type: string,
+    recipient: string,
+    subject: string,
+    body: string
+  ): Promise<INotification> {
     const notification = new NotificationModel({
       userId,
       type,
@@ -88,44 +99,46 @@ export class NotificationService {
   }
 
   async handleStockLowDetected(payload: unknown): Promise<void> {
-    const { productId, currentQuantity } = payload as { productId: string; currentQuantity: number };
+    const { productId, productName, currentQuantity } = payload as { productId: string; productName?: string; currentQuantity: number };
     this.logger.info('Processing stock.low.detected notification event', { productId });
-    // Sends email to admin recipient
-    await this.sendNotificationWithRetry(
+    const label = productName ?? productId;
+    // Admin broadcast (userId null): shows in the DB, not scoped to a single user.
+    await this.dispatch(
       null,
       'LOW_STOCK',
       'admin@example.com',
-      'low-stock',
-      { productId, currentQuantity }
+      'Low stock alert',
+      `${label} is low on stock (${currentQuantity} remaining).`
     );
   }
 
   async handleStockIn(payload: unknown): Promise<void> {
-    const { productId, quantity, userId, userEmail } = payload as { productId: string; quantity: number; userId: string; userEmail?: string };
-    this.logger.info('Processing stock.in.created notification event', { productId, userId });
-    if (userEmail) {
-      await this.sendNotificationWithRetry(
-        userId,
-        'STOCK_MOVEMENT',
-        userEmail,
-        'stock-confirm',
-        { productId, quantity }
-      );
-    }
+    await this.notifyStockMovement(payload, 'stock.in.created');
   }
 
   async handleStockOut(payload: unknown): Promise<void> {
-    const { productId, quantity, userId, userEmail } = payload as { productId: string; quantity: number; userId: string; userEmail?: string };
-    this.logger.info('Processing stock.out.created notification event', { productId, userId });
-    if (userEmail) {
-      await this.sendNotificationWithRetry(
-        userId,
-        'STOCK_MOVEMENT',
-        userEmail,
-        'stock-confirm',
-        { productId, quantity }
-      );
-    }
+    await this.notifyStockMovement(payload, 'stock.out.created');
+  }
+
+  // Persists a STOCK_MOVEMENT notification scoped to userId (so it appears on the
+  // user's notifications page). Body uses the product name, falling back to its id.
+  private async notifyStockMovement(payload: unknown, source: string): Promise<void> {
+    const { productId, productName, quantity, userId, userEmail } = payload as {
+      productId: string;
+      productName?: string;
+      quantity: number;
+      userId?: string;
+      userEmail?: string;
+    };
+    this.logger.info(`Processing ${source} notification event`, { productId, userId });
+    const label = productName ?? productId;
+    await this.dispatch(
+      userId ?? null,
+      'STOCK_MOVEMENT',
+      userEmail ?? 'user@example.com',
+      'Stock movement recorded',
+      `Stock movement recorded for ${label}: quantity ${quantity}.`
+    );
   }
 
   // DATABASE API ACTIONS

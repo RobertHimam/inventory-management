@@ -109,6 +109,7 @@ describe('NotificationService Unit Tests', () => {
     it('should send low stock alert to admin', async () => {
       const payload = {
         productId: 'prod-99',
+        productName: 'Widget',
         currentQuantity: 3,
         reorderLevel: 5,
         timestamp: new Date(),
@@ -118,8 +119,8 @@ describe('NotificationService Unit Tests', () => {
 
       expect(mockEmailClient.send).toHaveBeenCalledWith(
         'admin@example.com', // default admin recipient
-        'LOW STOCK ALERT: prod-99',
-        'Product prod-99 has reached a low stock of 3.'
+        'Low stock alert',
+        'Widget is low on stock (3 remaining).'
       );
 
       const notif = await NotificationModel.findOne({ type: 'LOW_STOCK' });
@@ -132,6 +133,7 @@ describe('NotificationService Unit Tests', () => {
     it('should handle stock in confirmation', async () => {
       const payload = {
         productId: 'prod-in',
+        productName: 'Widget',
         quantity: 5,
         userId: 'user-77',
         userEmail: 'user77@example.com',
@@ -142,11 +144,30 @@ describe('NotificationService Unit Tests', () => {
 
       expect(mockEmailClient.send).toHaveBeenCalledWith(
         'user77@example.com',
-        'Stock Transaction Confirmation',
-        'Dear User, your stock transaction of 5 items for product prod-in has been recorded.'
+        'Stock movement recorded',
+        'Stock movement recorded for Widget: quantity 5.'
       );
 
       const notif = await NotificationModel.findOne({ userId: 'user-77' });
+      expect(notif!.status).toBe('SENT');
+    });
+
+    it('should still persist a stock-in notification scoped to userId when no userEmail is present', async () => {
+      const payload = {
+        productId: 'prod-noemail',
+        productName: 'Keyboard',
+        quantity: 7,
+        userId: 'user-88',
+        // no userEmail — must NOT be silently skipped
+      };
+
+      await service.handleStockIn(payload);
+
+      const notif = await NotificationModel.findOne({ userId: 'user-88' });
+      expect(notif).not.toBeNull();
+      expect(notif!.type).toBe('STOCK_MOVEMENT');
+      expect(notif!.recipient).toBe('user@example.com'); // fallback recipient
+      expect(notif!.body).toBe('Stock movement recorded for Keyboard: quantity 7.');
       expect(notif!.status).toBe('SENT');
     });
   });

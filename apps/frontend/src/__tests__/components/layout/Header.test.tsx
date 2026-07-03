@@ -1,5 +1,5 @@
 /** @jest-environment jsdom */
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { Header } from '../../../components/layout/Header'
 import { useAuthStore } from '../../../store/authStore'
@@ -46,16 +46,20 @@ describe('Header', () => {
     expect(screen.getByText('ADMIN')).toBeInTheDocument()
   })
 
-  it('has a logout button', () => {
+  it('exposes a Sign out action inside the user menu', () => {
     renderHeader()
+    expect(screen.queryByRole('button', { name: /sign out/i })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /user menu/i }))
     expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument()
   })
 
   it('logout clears auth state and navigates to /login', async () => {
     renderHeader()
+    fireEvent.click(screen.getByRole('button', { name: /user menu/i }))
     fireEvent.click(screen.getByRole('button', { name: /sign out/i }))
-    await screen.findByRole('button', { name: /sign out/i })
-    expect(useAuthStore.getState().isAuthenticated).toBe(false)
-    expect(mockNavigate).toHaveBeenCalledWith('/login')
+    await waitFor(() => {
+      expect(useAuthStore.getState().isAuthenticated).toBe(false)
+      expect(mockNavigate).toHaveBeenCalledWith('/login')
+    })
   })
 })

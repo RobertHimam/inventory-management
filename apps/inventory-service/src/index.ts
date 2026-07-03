@@ -16,9 +16,9 @@ async function start() {
 
   try {
     await eventBus.subscribe('product.created', async (payload) => {
-      const { productId, name, sku, stockQuantity } = payload as ProductCreatedEventPayload;
+      const { productId, name, sku, stockQuantity, reorderLevel } = payload as ProductCreatedEventPayload;
       if (productId && name && sku) {
-        await inventoryRepository.syncProductInfo(productId, name, sku, stockQuantity ?? 0);
+        await inventoryRepository.syncProductInfo(productId, name, sku, stockQuantity ?? 0, reorderLevel);
       }
     });
   } catch (err) {
@@ -28,13 +28,13 @@ async function start() {
 
   try {
     await eventBus.subscribe('product.updated', async (payload) => {
-      const { productId, name, sku } = payload as ProductUpdatedEventPayload;
-      if (productId && (name || sku)) {
+      const { productId, name, sku, reorderLevel } = payload as ProductUpdatedEventPayload;
+      if (productId && (name || sku || reorderLevel !== undefined)) {
         const current = await inventoryRepository.findItemByProductId(productId);
         const resolvedName = name ?? current?.productName ?? '';
         const resolvedSku = sku ?? current?.sku ?? '';
         if (resolvedName && resolvedSku) {
-          await inventoryRepository.syncProductInfo(productId, resolvedName, resolvedSku);
+          await inventoryRepository.syncProductInfo(productId, resolvedName, resolvedSku, undefined, reorderLevel);
         }
       }
     });

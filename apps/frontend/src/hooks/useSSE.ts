@@ -23,13 +23,14 @@ export function useSSE(handlers: SSEHandlers) {
     const url = `${SSE_BASE}/events?token=${encodeURIComponent(accessToken)}`
     const es = new EventSource(url)
 
-    es.addEventListener('stock_in', (e) => {
+    // Event names must match what sse-service broadcasts (hyphenated).
+    es.addEventListener('stock-in', (e) => {
       try { handlersRef.current.onStockIn?.(JSON.parse(e.data)) } catch (_e) { /* ignore parse errors */ }
     })
-    es.addEventListener('stock_out', (e) => {
+    es.addEventListener('stock-out', (e) => {
       try { handlersRef.current.onStockOut?.(JSON.parse(e.data)) } catch (_e) { /* ignore parse errors */ }
     })
-    es.addEventListener('low_stock', (e) => {
+    es.addEventListener('low-stock', (e) => {
       try { handlersRef.current.onLowStock?.(JSON.parse(e.data)) } catch (_e) { /* ignore parse errors */ }
     })
     es.addEventListener('notification', (e) => {

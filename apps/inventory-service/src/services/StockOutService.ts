@@ -57,6 +57,7 @@ export class StockOutService {
         const outEvent = createStockOutCreatedEvent(cid, {
           stockOutId: transaction.id,
           productId,
+          productName: updatedItem.productName,
           quantity,
           userId,
         });
@@ -98,6 +99,7 @@ export class StockOutService {
         if (updatedItem.quantity <= (updatedItem.reorderLevel ?? 10)) {
           const lowStockEvent = createLowStockDetectedEvent(cid, {
             productId,
+            productName: updatedItem.productName,
             currentQuantity: updatedItem.quantity,
             reorderLevel: updatedItem.reorderLevel ?? 10,
             timestamp: new Date(),

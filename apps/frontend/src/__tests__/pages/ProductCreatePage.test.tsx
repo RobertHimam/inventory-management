@@ -37,6 +37,11 @@ function renderPage() {
   )
 }
 
+async function pickCategory() {
+  await userEvent.click(screen.getByRole('combobox', { name: /category/i }))
+  await userEvent.click(await screen.findByRole('option', { name: /electronics/i }))
+}
+
 describe('ProductCreatePage', () => {
   beforeEach(() => {
     mockNavigate.mockReset()
@@ -80,7 +85,7 @@ describe('ProductCreatePage', () => {
     await userEvent.type(screen.getByLabelText(/name/i), 'Widget')
     await userEvent.type(screen.getByLabelText(/price/i), '-5')
     await userEvent.type(screen.getByLabelText(/sku/i), 'WGT-001')
-    await userEvent.selectOptions(screen.getByLabelText(/category/i), 'Electronics')
+    await pickCategory()
     fireEvent.click(screen.getByRole('button', { name: /create/i }))
     await waitFor(() => {
       expect(screen.getByText(/price cannot be negative/i)).toBeInTheDocument()
@@ -93,7 +98,7 @@ describe('ProductCreatePage', () => {
     await userEvent.type(screen.getByLabelText(/name/i), 'Widget')
     await userEvent.type(screen.getByLabelText(/price/i), '9.99')
     await userEvent.type(screen.getByLabelText(/sku/i), 'WGT-001')
-    await userEvent.selectOptions(screen.getByLabelText(/category/i), 'Electronics')
+    await pickCategory()
     fireEvent.click(screen.getByRole('button', { name: /create/i }))
     await waitFor(() => {
       expect(mockCreateProduct).toHaveBeenCalledWith(
@@ -109,7 +114,7 @@ describe('ProductCreatePage', () => {
     await userEvent.type(screen.getByLabelText(/name/i), 'Widget')
     await userEvent.type(screen.getByLabelText(/price/i), '9.99')
     await userEvent.type(screen.getByLabelText(/sku/i), 'WGT-001')
-    await userEvent.selectOptions(screen.getByLabelText(/category/i), 'Electronics')
+    await pickCategory()
     fireEvent.click(screen.getByRole('button', { name: /create/i }))
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/products')
@@ -145,7 +150,7 @@ describe('ProductCreatePage', () => {
     await userEvent.type(screen.getByLabelText(/name/i), 'Widget')
     await userEvent.type(screen.getByLabelText(/price/i), '9.99')
     await userEvent.type(screen.getByLabelText(/sku/i), 'WGT-001')
-    await userEvent.selectOptions(screen.getByLabelText(/category/i), 'Electronics')
+    await pickCategory()
     fireEvent.click(screen.getByRole('button', { name: /create/i }))
     await waitFor(() => {
       expect(mockToastSuccess).toHaveBeenCalledWith(expect.stringContaining('created'))
@@ -158,7 +163,7 @@ describe('ProductCreatePage', () => {
     await userEvent.type(screen.getByLabelText(/name/i), 'Widget')
     await userEvent.type(screen.getByLabelText(/price/i), '9.99')
     await userEvent.type(screen.getByLabelText(/sku/i), 'WGT-001')
-    await userEvent.selectOptions(screen.getByLabelText(/category/i), 'Electronics')
+    await pickCategory()
     fireEvent.click(screen.getByRole('button', { name: /create/i }))
     await waitFor(() => {
       expect(mockToastError).toHaveBeenCalled()

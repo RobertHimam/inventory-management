@@ -35,7 +35,7 @@ export class StockInService {
       });
 
       // 3. Update Inventory item quantity
-      await this.repository.upsertItem(productId, quantity);
+      const updatedItem = await this.repository.upsertItem(productId, quantity);
 
       // 4. Publish Event
       if (this.eventBus) {
@@ -43,7 +43,9 @@ export class StockInService {
         const event = createStockInCreatedEvent(cid, {
           stockInId: transaction.id,
           productId,
+          productName: updatedItem.productName,
           quantity,
+          userId,
         });
 
         try {

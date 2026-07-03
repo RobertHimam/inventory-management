@@ -8,7 +8,9 @@ export interface ProductCreatedEventPayload {
   sku: string;
   categoryId: string;
   price: number;
+  cost?: number;
   stockQuantity?: number;
+  reorderLevel?: number;
 }
 
 export const productCreatedEventSchema = z.object({
@@ -17,7 +19,9 @@ export const productCreatedEventSchema = z.object({
   sku: z.string(),
   categoryId: z.string(),
   price: z.number(),
+  cost: z.number().optional(),
   stockQuantity: z.number().optional(),
+  reorderLevel: z.number().optional(),
 });
 
 export function createProductCreatedEvent(
@@ -39,6 +43,8 @@ export interface ProductUpdatedEventPayload {
   sku?: string;
   categoryId?: string;
   price?: number;
+  cost?: number;
+  reorderLevel?: number;
   isActive?: boolean;
 }
 
@@ -48,6 +54,8 @@ export const productUpdatedEventSchema = z.object({
   sku: z.string().optional(),
   categoryId: z.string().optional(),
   price: z.number().optional(),
+  cost: z.number().optional(),
+  reorderLevel: z.number().optional(),
   isActive: z.boolean().optional(),
 });
 

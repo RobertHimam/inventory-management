@@ -4,9 +4,11 @@ export interface IProduct extends Document {
   name: string;
   description?: string;
   price: number;
+  cost: number;
   sku: string;
   category: string;
   stockQuantity: number;
+  reorderLevel: number;
   isActive: boolean;
   deletedAt: Date | null;
   deletedBy: string | null;
@@ -32,6 +34,11 @@ const ProductSchema: Schema = new Schema(
       required: [true, 'Price is required'],
       min: [0, 'Price cannot be negative'],
     },
+    cost: {
+      type: Number,
+      min: [0, 'Cost cannot be negative'],
+      default: 0,
+    },
     sku: {
       type: String,
       required: [true, 'SKU is required'],
@@ -48,6 +55,11 @@ const ProductSchema: Schema = new Schema(
       type: Number,
       required: [true, 'Stock quantity is required'],
       min: [0, 'Stock quantity cannot be negative'],
+      default: 0,
+    },
+    reorderLevel: {
+      type: Number,
+      min: [0, 'Reorder level cannot be negative'],
       default: 0,
     },
     isActive: {

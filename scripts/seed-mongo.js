@@ -5,8 +5,10 @@
 
 'use strict';
 
+/* eslint-disable no-console, @typescript-eslint/no-var-requires --
+   Node CLI seed script: console is the intended output, require is CJS. */
+
 const { MongoClient } = require('mongodb');
-const crypto = require('crypto');
 
 const MONGODB_URI =
   process.env.MONGODB_URI ?? 'mongodb://admin:admin123@localhost:27017/auth?authSource=admin';

@@ -9,18 +9,25 @@ export class RabbitMQConnection {
     this.url = url;
   }
 
-  async connect(): Promise<void> {
-    let conn: amqp.ChannelModel | null = null;
-    try {
-      conn = await amqp.connect(this.url);
-      const channel = await conn.createChannel();
-      this.connection = conn;
-      this.channel = channel;
-    } catch (err) {
-      if (conn) {
-        await conn.close().catch(() => {});
+  // Retries so a service surviving a cold start (broker not yet accepting
+  // connections) waits for RabbitMQ instead of crash-looping on ECONNREFUSED.
+  // ponytail: fixed window (retries * delayMs); widen if a slower broker needs it.
+  async connect(retries = 10, delayMs = 3000): Promise<void> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      let conn: amqp.ChannelModel | null = null;
+      try {
+        conn = await amqp.connect(this.url);
+        const channel = await conn.createChannel();
+        this.connection = conn;
+        this.channel = channel;
+        return;
+      } catch (err) {
+        if (conn) {
+          await conn.close().catch(() => {});
+        }
+        if (attempt === retries) throw err;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
-      throw err;
     }
   }
 

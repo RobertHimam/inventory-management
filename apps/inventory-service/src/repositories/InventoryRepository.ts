@@ -81,8 +81,12 @@ export class InventoryRepository implements IInventoryRepository {
     return { data: formattedData, total };
   }
 
-  async syncProductInfo(productId: string, productName: string, sku: string, initialQuantity?: number): Promise<void> {
-    const update: Record<string, unknown> = { $set: { productName, sku } };
+  async syncProductInfo(productId: string, productName: string, sku: string, initialQuantity?: number, reorderLevel?: number): Promise<void> {
+    const set: Record<string, unknown> = { productName, sku };
+    if (reorderLevel !== undefined) {
+      set.reorderLevel = reorderLevel;
+    }
+    const update: Record<string, unknown> = { $set: set };
     if (initialQuantity !== undefined) {
       update.$setOnInsert = { quantity: initialQuantity };
     }

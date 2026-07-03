@@ -8,12 +8,19 @@ export class ReportService {
 
   // EVENT HANDLERS
   async handleProductCreated(payload: unknown): Promise<void> {
-    const p = payload as { productId: string; name: string; sku: string; price: number; stockQuantity?: number };
+    const p = payload as { productId: string; name: string; sku: string; price: number; cost?: number; stockQuantity?: number; reorderLevel?: number };
     this.logger.info('Handling product.created in ReportService', { productId: p.productId });
     await ProductModel.findOneAndUpdate(
       { productId: p.productId },
       {
-        $set: { name: p.name, sku: p.sku, price: p.price, deletedAt: null },
+        $set: {
+          name: p.name,
+          sku: p.sku,
+          price: p.price,
+          cost: p.cost ?? 0,
+          reorderLevel: p.reorderLevel ?? 0,
+          deletedAt: null,
+        },
         $setOnInsert: { quantity: p.stockQuantity ?? 0 },
       },
       { upsert: true, new: true }
@@ -22,12 +29,14 @@ export class ReportService {
   }
 
   async handleProductUpdated(payload: unknown): Promise<void> {
-    const p = payload as { productId: string; name?: string; sku?: string; price?: number };
+    const p = payload as { productId: string; name?: string; sku?: string; price?: number; cost?: number; reorderLevel?: number };
     this.logger.info('Handling product.updated in ReportService', { productId: p.productId });
     const updates: Record<string, unknown> = {};
     if (p.name !== undefined) updates.name = p.name;
     if (p.sku !== undefined) updates.sku = p.sku;
     if (p.price !== undefined) updates.price = p.price;
+    if (p.cost !== undefined) updates.cost = p.cost;
+    if (p.reorderLevel !== undefined) updates.reorderLevel = p.reorderLevel;
     await ProductModel.findOneAndUpdate({ productId: p.productId }, { $set: updates });
     await this.invalidateCache('dashboard|inventory-valuation');
   }

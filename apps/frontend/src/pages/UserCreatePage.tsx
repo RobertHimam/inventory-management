@@ -8,6 +8,11 @@ import { Role } from '@inventory/shared-types'
 import type { CreateUserDto } from '@inventory/shared-types'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { SecondaryButton } from '@/components/ui/SecondaryButton'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { fieldClass } from '@/lib/fieldClass'
 
 const schema = z.object({
   username: z.string().min(1, 'Username is required').max(50, 'Max 50 characters'),
@@ -58,79 +63,68 @@ export function UserCreatePage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Create User</h1>
+    <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6">
+      <PageHeader title="Create User" />
 
       {isError && (
-        <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+        <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {getErrorMessage(error)}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-            Username
-          </label>
-          <input
-            id="username"
-            type="text"
-            {...register('username')}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.username && <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>}
-        </div>
+      <Card>
+        <CardContent className="p-4 sm:p-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Label htmlFor="username" className="mb-1.5 block">
+                Username
+              </Label>
+              <Input id="username" type="text" {...register('username')} />
+              {errors.username && <p className="mt-1 text-xs text-red-600">{errors.username.message}</p>}
+            </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email
-          </label>
-          <input
-            id="email"
-            type="email"
-            {...register('email')}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
-        </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="email" className="mb-1.5 block">
+                Email
+              </Label>
+              <Input id="email" type="email" {...register('email')} />
+              {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
+            </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-            id="password"
-            type="password"
-            {...register('password')}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
-        </div>
+            <div>
+              <Label htmlFor="password" className="mb-1.5 block">
+                Password
+              </Label>
+              <Input id="password" type="password" {...register('password')} />
+              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
+            </div>
 
-        <div>
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-            Role
-          </label>
-          <select
-            id="role"
-            {...register('role')}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value={Role.USER}>USER</option>
-            <option value={Role.ADMIN}>ADMIN</option>
-          </select>
-          {errors.role && <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>}
-        </div>
+            <div>
+              <Label htmlFor="role" className="mb-1.5 block">
+                Role
+              </Label>
+              <select id="role" {...register('role')} className={`${fieldClass} min-h-[44px]`}>
+                <option value={Role.USER}>USER</option>
+                <option value={Role.ADMIN}>ADMIN</option>
+              </select>
+              {errors.role && <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>}
+            </div>
 
-        <div className="flex gap-3 pt-2">
-          <PrimaryButton type="submit" disabled={isPending}>
-            {isPending ? 'Creating...' : 'Create'}
-          </PrimaryButton>
-          <SecondaryButton type="button" onClick={() => navigate('/users')}>
-            Cancel
-          </SecondaryButton>
-        </div>
-      </form>
+            <div className="flex flex-col-reverse gap-3 pt-2 sm:col-span-2 sm:flex-row">
+              <SecondaryButton
+                type="button"
+                onClick={() => navigate('/users')}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={isPending} className="w-full sm:w-auto">
+                {isPending ? 'Creating...' : 'Create'}
+              </PrimaryButton>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

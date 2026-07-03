@@ -2,9 +2,15 @@
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { DashboardPage } from '../../pages/DashboardPage'
+import { useAuthStore } from '../../store/authStore'
+import { Role } from '@inventory/shared-types'
+import type { AuthUser } from '@inventory/shared-types'
 
 const mockUseProductList = jest.fn()
 const mockUseInventoryList = jest.fn()
+const mockUseLowStockReport = jest.fn()
+const mockUseSalesReport = jest.fn()
+const mockUseInventoryValuation = jest.fn()
 
 jest.mock('../../hooks/useProducts', () => ({
   useProductList: (...args: unknown[]) => mockUseProductList(...args),
@@ -13,6 +19,15 @@ jest.mock('../../hooks/useProducts', () => ({
 jest.mock('../../hooks/useInventory', () => ({
   useInventoryList: (...args: unknown[]) => mockUseInventoryList(...args),
 }))
+
+jest.mock('../../hooks/useReports', () => ({
+  useLowStockReport: () => mockUseLowStockReport(),
+  useSalesReport: () => mockUseSalesReport(),
+  useInventoryValuation: () => mockUseInventoryValuation(),
+}))
+
+const adminUser: AuthUser = { id: '1', email: 'admin@test.com', username: 'admin', role: Role.ADMIN }
+const regularUser: AuthUser = { id: '2', email: 'user@test.com', username: 'user', role: Role.USER }
 
 function renderPage() {
   return render(
@@ -34,6 +49,25 @@ describe('DashboardPage', () => {
       isLoading: false,
       isError: false,
     })
+    mockUseLowStockReport.mockReturnValue({
+      data: { data: { lowStockItems: [] } },
+      isLoading: false,
+      isError: false,
+    })
+    mockUseSalesReport.mockReturnValue({
+      data: { data: { sales: [], totalSalesAmount: 0, totalQuantitySold: 0 } },
+      isLoading: false,
+      isError: false,
+    })
+    mockUseInventoryValuation.mockReturnValue({
+      data: { data: { valuations: [], totalCostValuation: 0, totalRetailValuation: 0 } },
+      isLoading: false,
+      isError: false,
+    })
+  })
+
+  afterEach(() => {
+    useAuthStore.getState().clearAuth()
   })
 
   it('renders Dashboard heading', () => {
@@ -67,5 +101,36 @@ describe('DashboardPage', () => {
 
     renderPage()
     expect(screen.getByRole('alert')).toBeInTheDocument()
+  })
+
+  it('renders Low Stock Alerts widget for any user', () => {
+    renderPage()
+    expect(screen.getByText(/low stock alerts/i)).toBeInTheDocument()
+  })
+
+  it('shows Recent Sales widget for admin', () => {
+    useAuthStore.getState().setAuth(adminUser, 'token')
+    renderPage()
+    expect(screen.getByText(/recent sales/i)).toBeInTheDocument()
+  })
+
+  it('hides Recent Sales widget for regular user', () => {
+    useAuthStore.getState().setAuth(regularUser, 'token')
+    renderPage()
+    expect(screen.queryByText(/recent sales/i)).not.toBeInTheDocument()
+  })
+
+  it('shows chart widgets for admin', () => {
+    useAuthStore.getState().setAuth(adminUser, 'token')
+    renderPage()
+    expect(screen.getByText(/inventory value by product/i)).toBeInTheDocument()
+    expect(screen.getByText(/sales over time/i)).toBeInTheDocument()
+  })
+
+  it('hides chart widgets for regular user', () => {
+    useAuthStore.getState().setAuth(regularUser, 'token')
+    renderPage()
+    expect(screen.queryByText(/inventory value by product/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/sales over time/i)).not.toBeInTheDocument()
   })
 })

@@ -87,7 +87,7 @@ describe('ProductEditPage', () => {
     expect(screen.getByDisplayValue('Widget A')).toBeInTheDocument()
     expect(screen.getByDisplayValue('A great widget')).toBeInTheDocument()
     expect(screen.getByDisplayValue('WGT-001')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Electronics')).toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: /category/i })).toHaveTextContent('Electronics')
   })
 
   it('calls updateProduct with id and changed data on submit', async () => {

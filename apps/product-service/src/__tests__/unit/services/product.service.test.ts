@@ -73,7 +73,8 @@ describe('ProductService', () => {
       const result = await service.createProduct(validDto);
 
       expect(mockFindBySku).toHaveBeenCalledWith(validDto.sku);
-      expect(mockCreate).toHaveBeenCalledWith(validDto);
+      // Validation applies cost/reorderLevel defaults before persisting.
+      expect(mockCreate).toHaveBeenCalledWith({ ...validDto, cost: 0, reorderLevel: 0 });
       expect(result).toEqual(createdProduct);
     });
 
@@ -142,9 +143,11 @@ describe('ProductService', () => {
         name: 'Test Product',
         description: 'A test product',
         price: 99.99,
+        cost: 60,
         sku: 'TEST123',
         category: 'Electronics',
         stockQuantity: 10,
+        reorderLevel: 5,
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -161,7 +164,9 @@ describe('ProductService', () => {
         sku: 'TEST123',
         categoryId: 'Electronics',
         price: 99.99,
+        cost: 60,
         stockQuantity: 10,
+        reorderLevel: 5,
       }, 'test-correlation-id');
     });
 

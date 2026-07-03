@@ -8,6 +8,11 @@ import { useCategory, useUpdateCategory } from '../hooks/useCategories'
 import type { UpdateCategoryDto } from '@inventory/shared-types'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { SecondaryButton } from '@/components/ui/SecondaryButton'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { fieldClass } from '@/lib/fieldClass'
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Max 100 characters'),
@@ -64,51 +69,51 @@ export function CategoryEditPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit Category</h1>
+    <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6">
+      <PageHeader title="Edit Category" />
 
       {isError && (
-        <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+        <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {getErrorMessage(error)}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            {...register('name')}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
-        </div>
+      <Card>
+        <CardContent className="p-4 sm:p-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div>
+              <Label htmlFor="name" className="mb-1.5 block">
+                Name
+              </Label>
+              <Input id="name" type="text" {...register('name')} />
+              {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+            </div>
 
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-            Description
-          </label>
-          <textarea
-            id="description"
-            {...register('description')}
-            rows={3}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.description && <p className="mt-1 text-xs text-red-600">{errors.description.message}</p>}
-        </div>
+            <div>
+              <Label htmlFor="description" className="mb-1.5 block">
+                Description
+              </Label>
+              <textarea id="description" rows={3} {...register('description')} className={fieldClass} />
+              {errors.description && (
+                <p className="mt-1 text-xs text-red-600">{errors.description.message}</p>
+              )}
+            </div>
 
-        <div className="flex gap-3 pt-2">
-          <PrimaryButton type="submit" disabled={isPending}>
-            {isPending ? 'Updating...' : 'Update'}
-          </PrimaryButton>
-          <SecondaryButton type="button" onClick={() => navigate('/categories')}>
-            Cancel
-          </SecondaryButton>
-        </div>
-      </form>
+            <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row">
+              <SecondaryButton
+                type="button"
+                onClick={() => navigate('/categories')}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={isPending} className="w-full sm:w-auto">
+                {isPending ? 'Updating...' : 'Update'}
+              </PrimaryButton>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

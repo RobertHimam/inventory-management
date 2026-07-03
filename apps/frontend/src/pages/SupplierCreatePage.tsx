@@ -7,6 +7,11 @@ import { useCreateSupplier } from '../hooks/useSuppliers'
 import type { CreateSupplierDto } from '@inventory/shared-types'
 import { PrimaryButton } from '@/components/ui/PrimaryButton'
 import { SecondaryButton } from '@/components/ui/SecondaryButton'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { fieldClass } from '@/lib/fieldClass'
 
 const schema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Max 100 characters'),
@@ -54,77 +59,67 @@ export function SupplierCreatePage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Create Supplier</h1>
+    <div className="mx-auto w-full max-w-2xl px-4 py-6 sm:px-6">
+      <PageHeader title="Create Supplier" />
 
       {isError && (
-        <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+        <div role="alert" className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {getErrorMessage(error)}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Name
-          </label>
-          <input
-            id="name"
-            type="text"
-            {...register('name')}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
-        </div>
+      <Card>
+        <CardContent className="p-4 sm:p-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Label htmlFor="name" className="mb-1.5 block">
+                Name
+              </Label>
+              <Input id="name" type="text" {...register('name')} />
+              {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+            </div>
 
-        <div>
-          <label htmlFor="contactEmail" className="block text-sm font-medium text-gray-700 mb-1">
-            Contact Email
-          </label>
-          <input
-            id="contactEmail"
-            type="email"
-            {...register('contactEmail')}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.contactEmail && <p className="mt-1 text-xs text-red-600">{errors.contactEmail.message}</p>}
-        </div>
+            <div>
+              <Label htmlFor="contactEmail" className="mb-1.5 block">
+                Contact Email
+              </Label>
+              <Input id="contactEmail" type="email" {...register('contactEmail')} />
+              {errors.contactEmail && (
+                <p className="mt-1 text-xs text-red-600">{errors.contactEmail.message}</p>
+              )}
+            </div>
 
-        <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-            Phone
-          </label>
-          <input
-            id="phone"
-            type="text"
-            {...register('phone')}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
-        </div>
+            <div>
+              <Label htmlFor="phone" className="mb-1.5 block">
+                Phone
+              </Label>
+              <Input id="phone" type="text" {...register('phone')} />
+              {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone.message}</p>}
+            </div>
 
-        <div>
-          <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
-            Address
-          </label>
-          <textarea
-            id="address"
-            {...register('address')}
-            rows={3}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          {errors.address && <p className="mt-1 text-xs text-red-600">{errors.address.message}</p>}
-        </div>
+            <div className="sm:col-span-2">
+              <Label htmlFor="address" className="mb-1.5 block">
+                Address
+              </Label>
+              <textarea id="address" rows={3} {...register('address')} className={fieldClass} />
+              {errors.address && <p className="mt-1 text-xs text-red-600">{errors.address.message}</p>}
+            </div>
 
-        <div className="flex gap-3 pt-2">
-          <PrimaryButton type="submit" disabled={isPending}>
-            {isPending ? 'Creating...' : 'Create'}
-          </PrimaryButton>
-          <SecondaryButton type="button" onClick={() => navigate('/suppliers')}>
-            Cancel
-          </SecondaryButton>
-        </div>
-      </form>
+            <div className="flex flex-col-reverse gap-3 pt-2 sm:col-span-2 sm:flex-row">
+              <SecondaryButton
+                type="button"
+                onClick={() => navigate('/suppliers')}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={isPending} className="w-full sm:w-auto">
+                {isPending ? 'Creating...' : 'Create'}
+              </PrimaryButton>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
     </div>
   )
 }

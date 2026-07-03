@@ -3,9 +3,11 @@ export interface Product {
   name: string;
   description?: string;
   price: number;
+  cost?: number;
   sku: string;
   category: string;
   stockQuantity: number;
+  reorderLevel?: number;
   isActive: boolean;
   deletedAt: Date | null;
   deletedBy: string | null;
@@ -41,9 +43,11 @@ export interface CreateProductDto {
   name: string;
   description?: string;
   price: number;
+  cost?: number;
   sku: string;
   category: string;
   stockQuantity?: number;
+  reorderLevel?: number;
   isActive?: boolean;
 }
 

@@ -27,7 +27,7 @@ export interface IInventoryRepository {
     quantity: number;
     createdBy: string;
   }): Promise<StockOut>;
-  syncProductInfo(productId: string, productName: string, sku: string, initialQuantity?: number): Promise<void>;
+  syncProductInfo(productId: string, productName: string, sku: string, initialQuantity?: number, reorderLevel?: number): Promise<void>;
   createStockAdjustmentTransaction(data: {
     productId: string;
     quantity: number;
