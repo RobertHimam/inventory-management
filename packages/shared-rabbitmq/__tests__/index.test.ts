@@ -51,7 +51,7 @@ describe('RabbitMQConnection', () => {
     } as any;
     (amqp.connect as jest.Mock).mockResolvedValue(mockConn);
     const conn = new RabbitMQConnection('amqp://localhost');
-    await expect(conn.connect()).rejects.toThrow('channel fail');
+    await expect(conn.connect(1, 0)).rejects.toThrow('channel fail');
     expect(mockConn.close).toHaveBeenCalled();
   });
 });
