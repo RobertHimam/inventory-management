@@ -36,10 +36,10 @@ describe('response interceptor', () => {
     // Adapter always 401s the refresh call. Without the guard this recurses
     // into the pending-request queue and never settles → blank page.
     apiClient.defaults.adapter = async (config) => {
-      const err: any = new Error('401')
-      err.config = config
-      err.response = { status: 401, data: { error: 'No refresh token' } }
-      throw err
+      throw Object.assign(new Error('401'), {
+        config,
+        response: { status: 401, data: { error: 'No refresh token' } },
+      })
     }
     const onUnauthorized = jest.fn()
     setOnUnauthorized(onUnauthorized)
