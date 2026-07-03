@@ -43,3 +43,6 @@ pnpm-debug.log*
 # Temporary files
 tmp/
 temp/
+
+# Claude Code agent worktrees / local state
+.claude/
